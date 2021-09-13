@@ -1,13 +1,13 @@
 /********************************************************************************
-** Form generated from reading UI file 'design.ui'
+** Form generated from reading UI file 'designtEAOKe.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.12.8
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
 
-#ifndef DESIGN_H
-#define DESIGN_H
+#ifndef DESIGNTEAOKE_H
+#define DESIGNTEAOKE_H
 
 #include <QtCore/QLocale>
 #include <QtCore/QVariant>
@@ -32,14 +32,9 @@ class Ui_MainWindow
 public:
     QWidget *centralwidget;
     QGridLayout *gridLayout;
-    QPushButton *left_btn;
-    QPushButton *up_btn;
-    QPushButton *load_model_btn;
-    QPushButton *load_camera_btn;
-    QPushButton *add_camera_btn;
-    QPushButton *down_btn;
     QPushButton *right_btn;
-    QGraphicsView *graphicsView;
+    QPushButton *left_btn;
+    QPushButton *load_camera_btn;
     QFrame *frame_4;
     QVBoxLayout *verticalLayout;
     QFrame *move_label;
@@ -72,7 +67,9 @@ public:
     QFrame *frame;
     QVBoxLayout *verticalLayout_2;
     QLabel *label_7;
-    QListWidget *objects_list;
+    QListWidget *cams_list;
+    QLabel *label_13;
+    QListWidget *figures_list;
     QPushButton *remove_object_btn;
     QPushButton *clear_scene_btn;
     QFrame *frame_6;
@@ -87,13 +84,19 @@ public:
     QLabel *label_8;
     QLabel *curr_camera_lbl;
     QPushButton *change_camera_btn;
+    QPushButton *load_model_btn;
+    QGraphicsView *graphicsView;
+    QPushButton *up_btn;
+    QPushButton *add_camera_btn;
+    QPushButton *down_btn;
+    QPushButton *load_light_btn;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *MainWindow)
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
-        MainWindow->resize(1345, 929);
+        MainWindow->resize(1345, 971);
         QPalette palette;
         QBrush brush(QColor(0, 0, 0, 255));
         brush.setStyle(Qt::SolidPattern);
@@ -173,59 +176,29 @@ public:
         centralwidget->setLayoutDirection(Qt::LeftToRight);
         gridLayout = new QGridLayout(centralwidget);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
-        left_btn = new QPushButton(centralwidget);
-        left_btn->setObjectName(QString::fromUtf8("left_btn"));
+        right_btn = new QPushButton(centralwidget);
+        right_btn->setObjectName(QString::fromUtf8("right_btn"));
         QFont font;
         font.setFamily(QString::fromUtf8("Arial"));
         font.setPointSize(9);
+        right_btn->setFont(font);
+
+        gridLayout->addWidget(right_btn, 1, 7, 1, 1);
+
+        left_btn = new QPushButton(centralwidget);
+        left_btn->setObjectName(QString::fromUtf8("left_btn"));
         left_btn->setFont(font);
 
         gridLayout->addWidget(left_btn, 1, 0, 1, 1);
 
-        up_btn = new QPushButton(centralwidget);
-        up_btn->setObjectName(QString::fromUtf8("up_btn"));
-        up_btn->setFont(font);
-
-        gridLayout->addWidget(up_btn, 1, 1, 1, 1);
-
-        load_model_btn = new QPushButton(centralwidget);
-        load_model_btn->setObjectName(QString::fromUtf8("load_model_btn"));
+        load_camera_btn = new QPushButton(centralwidget);
+        load_camera_btn->setObjectName(QString::fromUtf8("load_camera_btn"));
         QFont font1;
         font1.setFamily(QString::fromUtf8("Ubuntu"));
         font1.setPointSize(10);
-        load_model_btn->setFont(font1);
-
-        gridLayout->addWidget(load_model_btn, 1, 2, 1, 1);
-
-        load_camera_btn = new QPushButton(centralwidget);
-        load_camera_btn->setObjectName(QString::fromUtf8("load_camera_btn"));
         load_camera_btn->setFont(font1);
 
         gridLayout->addWidget(load_camera_btn, 1, 3, 1, 1);
-
-        add_camera_btn = new QPushButton(centralwidget);
-        add_camera_btn->setObjectName(QString::fromUtf8("add_camera_btn"));
-        add_camera_btn->setFont(font1);
-
-        gridLayout->addWidget(add_camera_btn, 1, 4, 1, 1);
-
-        down_btn = new QPushButton(centralwidget);
-        down_btn->setObjectName(QString::fromUtf8("down_btn"));
-        down_btn->setFont(font);
-
-        gridLayout->addWidget(down_btn, 1, 5, 1, 1);
-
-        right_btn = new QPushButton(centralwidget);
-        right_btn->setObjectName(QString::fromUtf8("right_btn"));
-        right_btn->setFont(font);
-
-        gridLayout->addWidget(right_btn, 1, 6, 1, 1);
-
-        graphicsView = new QGraphicsView(centralwidget);
-        graphicsView->setObjectName(QString::fromUtf8("graphicsView"));
-        graphicsView->setFont(font);
-
-        gridLayout->addWidget(graphicsView, 0, 0, 1, 7);
 
         frame_4 = new QFrame(centralwidget);
         frame_4->setObjectName(QString::fromUtf8("frame_4"));
@@ -461,16 +434,30 @@ public:
 
         verticalLayout_2->addWidget(label_7);
 
-        objects_list = new QListWidget(frame);
-        objects_list->setObjectName(QString::fromUtf8("objects_list"));
+        cams_list = new QListWidget(frame);
+        cams_list->setObjectName(QString::fromUtf8("cams_list"));
         QSizePolicy sizePolicy2(QSizePolicy::Maximum, QSizePolicy::Expanding);
         sizePolicy2.setHorizontalStretch(0);
         sizePolicy2.setVerticalStretch(0);
-        sizePolicy2.setHeightForWidth(objects_list->sizePolicy().hasHeightForWidth());
-        objects_list->setSizePolicy(sizePolicy2);
-        objects_list->setMaximumSize(QSize(200, 16777215));
+        sizePolicy2.setHeightForWidth(cams_list->sizePolicy().hasHeightForWidth());
+        cams_list->setSizePolicy(sizePolicy2);
+        cams_list->setMaximumSize(QSize(200, 100));
 
-        verticalLayout_2->addWidget(objects_list);
+        verticalLayout_2->addWidget(cams_list);
+
+        label_13 = new QLabel(frame);
+        label_13->setObjectName(QString::fromUtf8("label_13"));
+        label_13->setAlignment(Qt::AlignCenter);
+
+        verticalLayout_2->addWidget(label_13);
+
+        figures_list = new QListWidget(frame);
+        figures_list->setObjectName(QString::fromUtf8("figures_list"));
+        sizePolicy2.setHeightForWidth(figures_list->sizePolicy().hasHeightForWidth());
+        figures_list->setSizePolicy(sizePolicy2);
+        figures_list->setMaximumSize(QSize(200, 100));
+
+        verticalLayout_2->addWidget(figures_list);
 
         remove_object_btn = new QPushButton(frame);
         remove_object_btn->setObjectName(QString::fromUtf8("remove_object_btn"));
@@ -567,7 +554,42 @@ public:
         verticalLayout->addWidget(frame_5);
 
 
-        gridLayout->addWidget(frame_4, 0, 7, 2, 1);
+        gridLayout->addWidget(frame_4, 0, 8, 2, 1);
+
+        load_model_btn = new QPushButton(centralwidget);
+        load_model_btn->setObjectName(QString::fromUtf8("load_model_btn"));
+        load_model_btn->setFont(font1);
+
+        gridLayout->addWidget(load_model_btn, 1, 2, 1, 1);
+
+        graphicsView = new QGraphicsView(centralwidget);
+        graphicsView->setObjectName(QString::fromUtf8("graphicsView"));
+        graphicsView->setFont(font);
+
+        gridLayout->addWidget(graphicsView, 0, 0, 1, 8);
+
+        up_btn = new QPushButton(centralwidget);
+        up_btn->setObjectName(QString::fromUtf8("up_btn"));
+        up_btn->setFont(font);
+
+        gridLayout->addWidget(up_btn, 1, 1, 1, 1);
+
+        add_camera_btn = new QPushButton(centralwidget);
+        add_camera_btn->setObjectName(QString::fromUtf8("add_camera_btn"));
+        add_camera_btn->setFont(font1);
+
+        gridLayout->addWidget(add_camera_btn, 1, 5, 1, 1);
+
+        down_btn = new QPushButton(centralwidget);
+        down_btn->setObjectName(QString::fromUtf8("down_btn"));
+        down_btn->setFont(font);
+
+        gridLayout->addWidget(down_btn, 1, 6, 1, 1);
+
+        load_light_btn = new QPushButton(centralwidget);
+        load_light_btn->setObjectName(QString::fromUtf8("load_light_btn"));
+
+        gridLayout->addWidget(load_light_btn, 1, 4, 1, 1);
 
         MainWindow->setCentralWidget(centralwidget);
         statusbar = new QStatusBar(MainWindow);
@@ -595,7 +617,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        objects_list->setCurrentRow(-1);
+        cams_list->setCurrentRow(-1);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -604,13 +626,9 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "Lab 03", nullptr));
-        left_btn->setText(QApplication::translate("MainWindow", "\342\227\200", nullptr));
-        up_btn->setText(QApplication::translate("MainWindow", "\342\254\206", nullptr));
-        load_model_btn->setText(QApplication::translate("MainWindow", "Load model", nullptr));
-        load_camera_btn->setText(QApplication::translate("MainWindow", "Load camera", nullptr));
-        add_camera_btn->setText(QApplication::translate("MainWindow", "Add Camera", nullptr));
-        down_btn->setText(QApplication::translate("MainWindow", "\342\254\207", nullptr));
         right_btn->setText(QApplication::translate("MainWindow", "\342\226\266", nullptr));
+        left_btn->setText(QApplication::translate("MainWindow", "\342\227\200", nullptr));
+        load_camera_btn->setText(QApplication::translate("MainWindow", "Load camera", nullptr));
         label_3->setText(QApplication::translate("MainWindow", " dz", nullptr));
         label_2->setText(QApplication::translate("MainWindow", " dy", nullptr));
         label->setText(QApplication::translate("MainWindow", " dx", nullptr));
@@ -623,7 +641,8 @@ public:
         label_10->setText(QApplication::translate("MainWindow", "az", nullptr));
         rotate_btn->setText(QApplication::translate("MainWindow", "Rotate", nullptr));
         label_11->setText(QApplication::translate("MainWindow", "ax", nullptr));
-        label_7->setText(QApplication::translate("MainWindow", "Scene obj", nullptr));
+        label_7->setText(QApplication::translate("MainWindow", "Cams", nullptr));
+        label_13->setText(QApplication::translate("MainWindow", "Figures", nullptr));
         remove_object_btn->setText(QApplication::translate("MainWindow", "Remove", nullptr));
         clear_scene_btn->setText(QApplication::translate("MainWindow", "Clear scene", nullptr));
         label_9->setText(QApplication::translate("MainWindow", "Current model:", nullptr));
@@ -632,6 +651,11 @@ public:
         label_8->setText(QApplication::translate("MainWindow", "Current camera:", nullptr));
         curr_camera_lbl->setText(QApplication::translate("MainWindow", "None", nullptr));
         change_camera_btn->setText(QApplication::translate("MainWindow", "Change", nullptr));
+        load_model_btn->setText(QApplication::translate("MainWindow", "Load model", nullptr));
+        up_btn->setText(QApplication::translate("MainWindow", "\342\254\206", nullptr));
+        add_camera_btn->setText(QApplication::translate("MainWindow", "Add Camera", nullptr));
+        down_btn->setText(QApplication::translate("MainWindow", "\342\254\207", nullptr));
+        load_light_btn->setText(QApplication::translate("MainWindow", "Load light", nullptr));
     } // retranslateUi
 
 };
@@ -642,4 +666,4 @@ namespace Ui {
 
 QT_END_NAMESPACE
 
-#endif // DESIGN_H
+#endif // DESIGNTEAOKE_H

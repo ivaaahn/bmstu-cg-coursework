@@ -4,7 +4,7 @@
 
 #include <memory>
 #include <exceptions/load_exceptions.hpp>
-#include <load/loaders/file_loader/file_loader.hpp>
+#include <load/loaders/loaders.hpp>
 
 
 #include "registration_maker.hpp"

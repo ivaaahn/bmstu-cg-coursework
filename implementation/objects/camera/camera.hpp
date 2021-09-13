@@ -5,34 +5,30 @@
 #ifndef __LAB_03_CAMERA_HPP__
 #define __LAB_03_CAMERA_HPP__
 
-#include "objects/object.hpp"
-#include "objects/model/model_details/point/point.hpp"
-#include "visitor/draw_visitor/draw_visitor.hpp"
 
-class Camera : public InvisibleObject {
+#include <memory>
+#include <fstream>
+
+#include "math/linalg.hpp"
+
+using namespace linalg::aliases;
+
+class Camera {
 public:
-    friend class DrawVisitor;
-
     Camera() = default;
 
-    explicit Camera(const Point &position);
+    explicit Camera(const float3& position);
 
-    ~Camera() override = default;
+    explicit Camera(const std::shared_ptr<std::ifstream>& srcFile);
 
-    void transform(const Point &move_params, const Point &scale_params, const Point &rotate_params) override;
+    ~Camera() = default;
 
-    void accept(std::shared_ptr<Visitor> visitor) override;
+    void shift(const float3& params);
+
+    [[nodiscard]] const float3& getPos() const;
 
 private:
-    Point position;
-
-    void shiftX(double delta);
-
-    void shiftY(double delta);
-
-    void shiftZ(double delta);
-
-    [[nodiscard]] Point getPosition() const;
+    float3 position{};
 };
 
 

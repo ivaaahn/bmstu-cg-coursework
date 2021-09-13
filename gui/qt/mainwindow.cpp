@@ -1,24 +1,15 @@
 #include <QFileDialog>
-#include <commands/scene/render/render_scene.hpp>
 #include <exceptions/base_exception.hpp>
-#include <commands/model/load/load_model.hpp>
-#include <commands/model/remove/remove_model.hpp>
-#include <commands/camera/load/load_camera.hpp>
-#include <commands/camera/add/add_camera.hpp>
-#include <commands/camera/remove/remove_camera.hpp>
-#include <commands/camera/set/set_camera.hpp>
-#include <commands/camera/move/move_camera.hpp>
-#include <commands/model/move/move_model.hpp>
-#include <commands/model/scale/scale_model.hpp>
-#include <commands/model/rotate/rotate_model.hpp>
-#include <commands/camera/count/count_cameras.hpp>
-#include <commands/model/count/count_models.hpp>
-
+#include <iostream>
+#include "commands/model/model_commands.hpp"
+#include "commands/scene/scene_commands.hpp"
+#include "commands/camera/camera_commands.hpp"
+#include "commands/light/light_commands.hpp"
 #include "mainwindow.h"
 
 #include "drawer/factory/qt_drawer_factory.hpp"
 
-#define CAM_SHIFT 10
+#define CAM_SHIFT 2
 
 
 void MainWindow::setupScene() {
@@ -38,6 +29,7 @@ void MainWindow::updateScene() {
     try
     {
         this->facade->execute(render_scene_cmd);
+        this->drawer->updateScene();
     }
     catch (BaseException &ex)
     {
@@ -121,13 +113,14 @@ void MainWindow::on_load_model_btn_clicked() {
 
     auto filename = QFileDialog::getOpenFileName();
     if (filename.isNull()) return;
-    auto load_model_cmd = std::make_shared<LoadModel>(filename.toUtf8().data());
+    auto load_model_cmd = std::make_shared<LoadSphere>(filename.toUtf8().data());
+//    auto load_model_cmd = std::make_shared<LoadModel>(filename.toUtf8().data());
 
     try
     {
         this->facade->execute(load_model_cmd);
         this->updateScene();
-        this->ui->objects_list->addItem(QString("model_") + QString::number(++this->last_mod_id));
+        this->ui->figures_list->addItem(QString("figure_") + QString::number(++this->last_mod_id));
     }
     catch (const BaseException &ex)
     {
@@ -135,13 +128,41 @@ void MainWindow::on_load_model_btn_clicked() {
         return;
     }
 
-    auto obj_list = this->ui->objects_list;
-    this->ui->curr_model_lbl->setText(obj_list->item(obj_list->count() - 1)->text());
+    auto fig_list = this->ui->figures_list;
+    this->ui->curr_model_lbl->setText(fig_list->item(fig_list->count() - 1)->text());
+}
+
+void MainWindow::on_load_light_btn_clicked() {
+//    if (!this->cameraSelected())
+//    {
+//        QMessageBox::critical(nullptr, "Ошибка", "Сначала выберите камеру");
+//        return;
+//    }
+
+    auto filename = QFileDialog::getOpenFileName();
+    if (filename.isNull()) return;
+    auto load_light_cmd = std::make_shared<LoadLight>(filename.toUtf8().data());
+//    auto load_model_cmd = std::make_shared<LoadModel>(filename.toUtf8().data());
+
+    try
+    {
+        this->facade->execute(load_light_cmd);
+        this->updateScene();
+//        this->ui->figures_list->addItem(QString("figure_") + QString::number(++this->last_mod_id));
+    }
+    catch (const BaseException &ex)
+    {
+        QMessageBox::warning(this, "Error", QString(ex.what()));
+        return;
+    }
+
+//    auto fig_list = this->ui->figures_list;
+//    this->ui->curr_model_lbl->setText(fig_list->item(fig_list->count() - 1)->text());
 }
 
 void MainWindow::on_clear_scene_btn_clicked() {
-    auto obj_list = this->ui->objects_list;
-    if (!obj_list->count())
+    auto fig_list = this->ui->figures_list;
+    if (!fig_list->count())
     {
         QMessageBox::information(nullptr, "OK!", "Сцена уже очищена");
         return;
@@ -150,23 +171,25 @@ void MainWindow::on_clear_scene_btn_clicked() {
     std::shared_ptr<Command> remove_cmd;
 
     this->resetModel();
-    for (int i = obj_list->count() - 1; i >= 0; --i)
-        if (obj_list->item(i)->text().contains("model"))
+    for (int i = fig_list->count() - 1; i >= 0; --i)
+        if (fig_list->item(i)->text().contains("model"))
         {
             remove_cmd = std::make_shared<RemoveModel>(i);
             this->facade->execute(remove_cmd);
-            obj_list->takeItem(i);
+            fig_list->takeItem(i);
         }
 
     if (this->cameraSelected()) this->updateScene();
 
+    auto cam_list= this->ui->cams_list;
+
     this->resetCamera();
-    for (int i = obj_list->count() - 1; i >= 0; --i)
-        if (obj_list->item(i)->text().contains("camera"))
+    for (int i = cam_list->count() - 1; i >= 0; --i)
+        if (cam_list->item(i)->text().contains("camera"))
         {
             remove_cmd = std::make_shared<RemoveCamera>(i);
             this->facade->execute(remove_cmd);
-            obj_list->takeItem(i);
+            cam_list->takeItem(i);
         }
 }
 
@@ -178,7 +201,7 @@ void MainWindow::on_load_camera_btn_clicked() {
     try
     {
         this->facade->execute(load_camera_cmd);
-        this->ui->objects_list->addItem(QString("camera_") + QString::number(++this->last_cam_id));
+        this->ui->cams_list->addItem(QString("camera_") + QString::number(++this->last_cam_id));
     }
     catch (BaseException &ex)
     {
@@ -186,19 +209,20 @@ void MainWindow::on_load_camera_btn_clicked() {
         return;
     }
 
-    auto obj_list = this->ui->objects_list;
-    this->ui->curr_camera_lbl->setText(obj_list->item(obj_list->count() - 1)->text());
+    auto cam_list = this->ui->cams_list;
+    this->ui->curr_camera_lbl->setText(cam_list->item(cam_list->count() - 1)->text());
     this->updateScene();
 }
 
 void MainWindow::on_add_camera_btn_clicked() {
     auto r_content = ui->graphicsView->contentsRect();
-    auto add_camera_cmd = std::make_shared<AddCamera>(-r_content.width() / 2.0, -r_content.height() / 2.0, 0.0);
+    auto add_camera_cmd = std::make_shared<AddCamera>(0., 0., 0.);
+//    auto add_camera_cmd = std::make_shared<AddCamera>(-r_content.width() / 2.0, -r_content.height() / 2.0, 0.0);
 
     try
     {
         this->facade->execute(add_camera_cmd);
-        this->ui->objects_list->addItem(QString("camera_") + QString::number(++this->last_cam_id));
+        this->ui->cams_list->addItem(QString("camera_") + QString::number(++this->last_cam_id));
     }
     catch (BaseException &ex)
     {
@@ -206,19 +230,19 @@ void MainWindow::on_add_camera_btn_clicked() {
         return;
     }
 
-    auto obj_list = this->ui->objects_list;
+    auto obj_list = this->ui->cams_list;
     this->ui->curr_camera_lbl->setText(obj_list->item(obj_list->count() - 1)->text());
-    this->updateScene();
+//    this->updateScene();
 }
 
 void MainWindow::on_change_model_btn_clicked() {
-    if (this->ui->objects_list->currentRow() < 0)
+    if (this->ui->figures_list->currentRow() < 0)
     {
         QMessageBox::critical(nullptr, "Ошибка", "Выберите модель, которую хотите сделать текущей");
         return;
     }
 
-    auto curr_item = this->ui->objects_list->currentItem();
+    auto curr_item = this->ui->figures_list->currentItem();
 
     if (curr_item->text().contains("model"))
         this->ui->curr_model_lbl->setText(curr_item->text());
@@ -228,20 +252,20 @@ void MainWindow::on_change_model_btn_clicked() {
 
 
 void MainWindow::on_change_camera_btn_clicked() {
-    if (this->ui->objects_list->currentRow() < 0)
+    if (this->ui->cams_list->currentRow() < 0)
     {
         QMessageBox::critical(nullptr, "Ошибка", "Выберите камеру, которую хотите сделать текущей");
         return;
     }
 
-    auto curr_item = this->ui->objects_list->currentItem();
+    auto curr_item = this->ui->cams_list->currentItem();
     if (!curr_item->text().contains("camera"))
     {
         QMessageBox::critical(nullptr, "Ошибка", "Выберите корректную камеру");
         return;
     }
 
-    auto camera_set_cmd = std::make_shared<SetCamera>(this->ui->objects_list->currentRow());
+    auto camera_set_cmd = std::make_shared<SetCamera>(this->ui->cams_list->currentRow());
 
     try
     {
@@ -300,61 +324,61 @@ bool MainWindow::cameraSelected() { return this->ui->curr_camera_lbl->text() != 
 bool MainWindow::modelSelected() { return this->ui->curr_model_lbl->text() != QString("None"); }
 
 void MainWindow::on_remove_object_btn_clicked() {
-    auto curr_row = this->ui->objects_list->currentRow();
-    if (curr_row < 0)
-    {
-        QMessageBox::critical(nullptr, "Ошибка", "Выберите объект, который хотите удалить");
-        return;
-    }
-
-    std::shared_ptr<Command> remove_cmd;
-
-    auto text_item = this->ui->objects_list->currentItem()->text();
-    if (text_item.contains("camera"))
-    {
-        if (!this->canRemoveCamera(curr_row)) return;
-
-        auto cam_lbl = this->ui->curr_camera_lbl;
-        if (text_item == cam_lbl->text()) this->resetCamera();
-
-        remove_cmd = std::make_shared<RemoveCamera>(curr_row);
-    }
-    else
-    {
-        if (!this->canRemoveModel(curr_row)) return;
-
-        auto mod_lbl = this->ui->curr_model_lbl;
-        if (text_item == mod_lbl->text()) this->resetModel();
-
-        remove_cmd = std::make_shared<RemoveModel>(curr_row);
-    }
-
-    try
-    {
-        this->facade->execute(remove_cmd);
-        this->ui->objects_list->takeItem(curr_row);
-        this->updateScene();
-    } catch (BaseException &ex)
-    {
-        QMessageBox::warning(this, "Error", QString(ex.what()));
-        return;
-    }
+//    auto curr_row = this->ui->objects_list->currentRow();
+//    if (curr_row < 0)
+//    {
+//        QMessageBox::critical(nullptr, "Ошибка", "Выберите объект, который хотите удалить");
+//        return;
+//    }
+//
+//    std::shared_ptr<Command> remove_cmd;
+//
+//    auto text_item = this->ui->objects_list->currentItem()->text();
+//    if (text_item.contains("camera"))
+//    {
+//        if (!this->canRemoveCamera(curr_row)) return;
+//
+//        auto cam_lbl = this->ui->curr_camera_lbl;
+//        if (text_item == cam_lbl->text()) this->resetCamera();
+//
+//        remove_cmd = std::make_shared<RemoveCamera>(curr_row);
+//    }
+//    else
+//    {
+//        if (!this->canRemoveModel(curr_row)) return;
+//
+//        auto mod_lbl = this->ui->curr_model_lbl;
+//        if (text_item == mod_lbl->text()) this->resetModel();
+//
+//        remove_cmd = std::make_shared<RemoveModel>(curr_row);
+//    }
+//
+//    try
+//    {
+//        this->facade->execute(remove_cmd);
+//        this->ui->objects_list->takeItem(curr_row);
+//        this->updateScene();
+//    } catch (BaseException &ex)
+//    {
+//        QMessageBox::warning(this, "Error", QString(ex.what()));
+//        return;
+//    }
 }
 
 size_t MainWindow::getCurrCameraID() {
-    auto item = this->ui->objects_list->findItems(this->ui->curr_camera_lbl->text(), Qt::MatchExactly)[0];
-    return this->ui->objects_list->row(item);
+    auto item = this->ui->cams_list->findItems(this->ui->curr_camera_lbl->text(), Qt::MatchExactly)[0];
+    return this->ui->cams_list->row(item);
 }
 
 size_t MainWindow::getCurrModelID() {
-    auto item = this->ui->objects_list->findItems(this->ui->curr_model_lbl->text(), Qt::MatchExactly)[0];
-    return this->ui->objects_list->row(item);
+    auto item = this->ui->figures_list->findItems(this->ui->curr_model_lbl->text(), Qt::MatchExactly)[0];
+    return this->ui->figures_list->row(item);
 }
 
 void MainWindow::on_right_btn_clicked() {
     if (!this->checkCamAndModel()) return;
 
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), CAM_SHIFT, 0);
+    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), CAM_SHIFT, 0, 0);
     try
     {
         this->facade->execute(camera_move_cmd);
@@ -368,7 +392,7 @@ void MainWindow::on_right_btn_clicked() {
 void MainWindow::on_up_btn_clicked() {
     if (!this->checkCamAndModel()) return;
 
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), 0, -CAM_SHIFT);
+    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), 0, -CAM_SHIFT, 0);
     try
     {
         this->facade->execute(camera_move_cmd);
@@ -382,7 +406,7 @@ void MainWindow::on_up_btn_clicked() {
 void MainWindow::on_down_btn_clicked() {
     if (!this->checkCamAndModel()) return;
 
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), 0, CAM_SHIFT);
+    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), 0, CAM_SHIFT, 0);
     try
     {
         this->facade->execute(camera_move_cmd);
@@ -396,7 +420,7 @@ void MainWindow::on_down_btn_clicked() {
 void MainWindow::on_left_btn_clicked() {
     if (!this->checkCamAndModel()) return;
 
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), -CAM_SHIFT, 0);
+    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), -CAM_SHIFT, 0, 0);
     try
     {
         this->facade->execute(camera_move_cmd);
@@ -413,7 +437,13 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
     this->scene->setSceneRect(0, 0, ui->graphicsView->width(), ui->graphicsView->height());
 
     auto r_content = ui->graphicsView->contentsRect();
+
+    std::cout << ui->graphicsView->width() << "; " <<  ui->graphicsView->height() << std::endl;
+    std::cout << r_content.width() << "; " << r_content.height() << std::endl;
+
     this->scene->setSceneRect(0, 0, r_content.width(), r_content.height());
+//    this->updateWithImag
+//    this->drawer->updateWithImage();
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {

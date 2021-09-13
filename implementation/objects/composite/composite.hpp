@@ -20,10 +20,10 @@ public:
 
     bool add(const std::shared_ptr<Object> &component) override;
 
-    bool remove(const Iterator &iterator) override;
+    bool remove(const CamIterator &iterator) override;
 
-    Iterator begin() override;
-    Iterator end() override;
+    CamIterator begin() override;
+    CamIterator end() override;
 
     [[nodiscard]] ConstIterator begin() const override;
     [[nodiscard]] ConstIterator end() const override;

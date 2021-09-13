@@ -11,7 +11,9 @@
 #include "objects/model/model_details/point/point.hpp"
 #include "objects/model/model.hpp"
 #include "objects/camera/camera.hpp"
-#include "visitor/visitor.hpp"
+#include "scene/scene.hpp"
+//#include "visitor/visitor.hpp"
+#include "drawer/drawer.hpp"
 
 class DrawManager : public Manager {
 public:

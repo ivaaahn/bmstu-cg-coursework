@@ -17,16 +17,16 @@ bool Composite::add(const std::shared_ptr<Object> &component) {
     return true;
 }
 
-bool Composite::remove(const Iterator &iterator) {
+bool Composite::remove(const CamIterator &iterator) {
     this->objects.erase(iterator);
     return true;
 }
 
-Iterator Composite::begin() {
+CamIterator Composite::begin() {
     return this->objects.begin();
 }
 
-Iterator Composite::end() {
+CamIterator Composite::end() {
     return this->objects.end();
 }
 

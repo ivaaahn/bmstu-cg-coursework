@@ -10,22 +10,22 @@
 #include "objects/model/model.hpp"
 
 
-DrawVisitor::DrawVisitor(const std::shared_ptr<Drawer> &drawer, const std::shared_ptr<Camera> &camera) : drawer(drawer),
-                                                                                                         camera(camera) {}
+DrawVisitor::DrawVisitor(const std::shared_ptr<Drawer>& drawer,
+                         const std::shared_ptr<Camera>& camera) : drawer(drawer), camera(camera) {}
 
-void DrawVisitor::visit(const Model &model) {
+void DrawVisitor::visit(const Model& model) {
     auto points = model.getDetails()->getPoints();
 
-    for (const auto &edge : model.getDetails()->getEdges())
+    for (const auto& edge: model.getDetails()->getEdges())
         this->drawer->drawLine(
                 this->projectPoint(points.at(edge.getFirst())),
                 this->projectPoint(points.at(edge.getSecond())));
 }
 
 
-Point DrawVisitor::projectPoint(const Point &point) {
+Point DrawVisitor::projectPoint(const Point& point) {
     Point new_point(point);
-    Point camera_position(this->camera->getPosition());
+    Point camera_position(this->camera->getPos());
 
 
     new_point.setX(new_point.getX() - camera_position.getX());
@@ -35,7 +35,7 @@ Point DrawVisitor::projectPoint(const Point &point) {
 }
 
 
-void DrawVisitor::visit(const Camera &camera) {}
-
-void DrawVisitor::visit(const Composite &composite) {}
+//void DrawVisitor::visit(const Camera &camera) {}
+//
+//void DrawVisitor::visit(const Composite &composite) {}
 

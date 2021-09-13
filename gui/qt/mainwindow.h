@@ -7,9 +7,9 @@
 #include "design.h"
 
 #include "commands/command.hpp"
-#include "commands/camera/camera_command.hpp"
-#include "commands/model/model_command.hpp"
-#include "commands/scene/scene_command.hpp"
+#include "commands/camera/camera_commands.hpp"
+#include "commands/model/model_commands.hpp"
+#include "commands/scene/scene_commands.hpp"
 #include "drawer/drawer.hpp"
 #include "facade/facade.hpp"
 
@@ -69,6 +69,8 @@ private slots:
     void on_rotate_btn_clicked();
 
     void on_load_model_btn_clicked();
+
+    void on_load_light_btn_clicked();
 
     void on_load_camera_btn_clicked();
 

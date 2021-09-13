@@ -12,7 +12,7 @@
 
 class QtDrawerFactory : public DrawerFactory {
 public:
-    explicit QtDrawerFactory(std::shared_ptr<QGraphicsScene> &scene);
+    explicit QtDrawerFactory(std::shared_ptr<QGraphicsScene>& scene);
 
     std::unique_ptr<Drawer> createDrawer() override;
 

@@ -5,27 +5,27 @@
 #include "scene.hpp"
 
 #include <utility>
-#include "objects/composite/composite.hpp"
+//#include "objects/composite/composite.hpp"
 
-Scene::Scene() : obj(std::make_shared<Composite>()) {}
+Scene::Scene() {}
 
-void Scene::add(const std::shared_ptr<Object> &object) {
-    this->obj->add(object);
+//void Scene::add(const std::shared_ptr<Object> &object) {
+//    this->obj->add(object);
 
 //    if (obj->is_visible())
 //        this->models_count++;
 //    else
 //        this->cameras_count++;
-}
+//}
 
-void Scene::remove(const Iterator &it) {
+//void Scene::remove(const CamIterator &it) {
 //    if((*it)->is_visible())
 //        this->models_count--;
 //    else
 //        this->cameras_count--;
 
-    this->obj->remove(it);
-}
+//    this->obj->remove(it);
+//}
 
 //size_t Scene::getCamerasCount() const {
 //    return this->cameras_count;
@@ -35,31 +35,92 @@ void Scene::remove(const Iterator &it) {
 //    return this->models_count;
 //}
 
-Iterator Scene::begin() {
-    return this->obj->begin();
+CamIterator Scene::camBegin() {
+    return this->_cameras.begin();
 }
 
-Iterator Scene::end() {
-    return this->obj->end();
+CamIterator Scene::camEnd() {
+    return this->_cameras.end();
 }
+
+ModelIterator Scene::modelsBegin() {
+    return this->_models.begin();
+}
+
+ModelIterator Scene::modelsEnd() {
+    return this->_models.end();
+}
+//
+//CamIterator Scene::end() {
+//    return this->obj->end();
+//}
 //
 //void Scene::accept(std::shared_ptr<Visitor> visitor) {
 //    this->obj->accept(std::move(visitor));
 //}
+//
+//ConstIterator Scene::cbegin() const {
+//    return this->obj->cbegin();
+//}
+//
+//ConstIterator Scene::cend() const {
+//    return this->obj->cend();
+//}
+//
+//
+//ConstIterator Scene::begin() const {
+//    return this->obj->cbegin();
+//}
+//
+//ConstIterator Scene::end() const {
+//    return this->obj->cend();
+//}
 
-ConstIterator Scene::cbegin() const {
-    return this->obj->cbegin();
+void Scene::addCamera(const std::shared_ptr<Camera>& cam) {
+    this->_cameras.push_back(cam);
 }
 
-ConstIterator Scene::cend() const {
-    return this->obj->cend();
+void Scene::addModel(const std::shared_ptr<Figure>& figure) {
+    this->_models.push_back(figure);
 }
 
-
-ConstIterator Scene::begin() const {
-    return this->obj->cbegin();
+void Scene::addLight(const std::shared_ptr<Light>& light) {
+    this->_lights.push_back(light);
 }
 
-ConstIterator Scene::end() const {
-    return this->obj->cend();
+void Scene::removeCamera(const CamIterator& it) {
+    this->_cameras.erase(it);
+}
+
+void Scene::removeModel(const ModelIterator& it) {
+        //TODO
+}
+
+void Scene::removeLight(const LightIterator& it) {
+//    TODO
+}
+
+LightIterator Scene::lightsBegin() {
+    return this->_lights.begin();
+}
+
+LightIterator Scene::lightsEnd() {
+    return this->_lights.end();
+}
+
+bool Scene::isIntersect(const float3& src, const float3& dir, float3 hit, float3& N, Material& material) {
+    float modelsDist = std::numeric_limits<float>::max();
+    for (const auto &model: this->_models)
+    {
+        float currDistance;
+
+        if (model->rayIntersect(src, dir, currDistance) && currDistance < modelsDist)
+        {
+            modelsDist = currDistance;
+            hit = src + dir * currDistance;
+            N = linalg::normalize((hit - model->getCenter()));
+            material = model->getMaterial();
+        }
+    }
+    return modelsDist < 1000;
 }
