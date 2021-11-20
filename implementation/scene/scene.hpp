@@ -34,9 +34,8 @@ public:
 
     void removeLight(const LightIterator& it);
 
-    bool isIntersect(const float3& src,
-                     const float3& dir,
-                     float3 hit,
+    bool isIntersect(const std::shared_ptr<Ray>& ray,
+                     float3& hit,
                      float3& N,
                      Material& material);
 

@@ -7,9 +7,8 @@
 #include "qt_drawer.hpp"
 
 QtDrawer::QtDrawer(std::shared_ptr<QGraphicsScene>& scene) : scene(scene) {
-    this->image = QImage(1081, 900, QImage::Format_RGB32);
-
-    this->painter = std::make_shared<QPainter>(&this->image);
+    this->image = std::make_shared<QImage>(1081, 900, QImage::Format_RGB32);
+    this->painter = std::make_shared<QPainter>(this->image.get());
     this->updateScene();
 //    this->image.fill(Qt::white);
 //    color = QColor()
@@ -33,14 +32,22 @@ void QtDrawer::putPixel(const int2& coords, const ColorRGB& color) {
 }
 
 void QtDrawer::updateScene() {
-    this->pixmap = QPixmap::fromImage(this->image);
+//    uchar *tmp = this->image->bits();
+//    int size = (int)this->image->sizeInBytes();
+//
+//    for (int i = 3; i < 22; i += 3)
+//    {
+//        std::cout << (int)tmp[i - 3] << ' ' << (int)tmp[i - 2] << ' ' << (int)tmp[i - 1] << std::endl;
+//    }
+
+    this->pixmap = QPixmap::fromImage(*this->image);
     this->scene->addPixmap(this->pixmap);
-    this->scene->update();
+//    this->scene->update();
 }
 
 void QtDrawer::updateWithImage() {
 
-//    this->image = QImage(scene->width(), scene->height(), QImage::Format_RGB32);
+//    this->image = QImage(scene->WIDTH(), scene->height(), QImage::Format_RGB32);
 //    this->updateScene();
 }
 

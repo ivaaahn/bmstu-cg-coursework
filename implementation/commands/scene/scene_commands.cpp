@@ -12,9 +12,8 @@ void RenderScene::execute() {
     auto sceneManager = SceneManagerCreator().getManager();
     auto drawManager = DrawManagerCreator().getManager();
 
-    drawManager->setCamera(sceneManager->getMainCamera());
     drawManager->setDrawer(this->drawer);
 
 //    this->drawer->clearScene();
-    drawManager->draw(sceneManager->getScene());
+    drawManager->draw(sceneManager->getScene(), sceneManager->getMainCamera());
 }

@@ -3,12 +3,16 @@
 //
 
 #include "model_commands.hpp"
+
+#include <utility>
 #include "managers/scene/scene_manager.hpp"
 #include "managers/load/load_manager.hpp"
 
-AddModel::AddModel(std::shared_ptr<Figure> model) : model(model) {}
+AddModel::AddModel(std::shared_ptr<Figure> model) : model(std::move(model)) {}
 
-LoadModel::LoadModel(const std::string& filename) : filename(filename) {}
+LoadModel::LoadModel(std::string  filename) : filename(std::move(filename)) {}
+
+LoadTriangularModel::LoadTriangularModel(std::string  filename) : filename(std::move(filename)) {}
 
 MoveModel::MoveModel(size_t modelId, const float dx, const float dy, const float dz)
         : modelId(modelId), dx(dx), dy(dy), dz(dz) {}
@@ -25,7 +29,7 @@ ScaleModel::ScaleModel(size_t modelId, const float kx, const float ky, const flo
 TransformModel::TransformModel(size_t modelId, const float3& move, const float3& scale, const float3& rotate)
         : modelId(modelId), move(move), scale(scale), rotate(rotate) {}
 
-LoadSphere::LoadSphere(const std::string& filename) : filename(filename) {}
+LoadSphere::LoadSphere(std::string  filename) : filename(std::move(filename)) {}
 
 
 //CountModels::CountModels(std::shared_ptr<size_t> &count) : count(count) {}
@@ -52,6 +56,13 @@ void LoadModel::execute() {
 void LoadSphere::execute() {
     auto load_manager = LoadManagerCreator().getManager();
     load_manager->setFigureLoader(std::make_shared<SphereLoader>());
+    auto model = load_manager->figureLoad(this->filename);
+    AddModel(model).execute();
+}
+
+void LoadTriangularModel::execute() {
+    auto load_manager = LoadManagerCreator().getManager();
+    load_manager->setFigureLoader(std::make_shared<TriangularModelLoader>());
     auto model = load_manager->figureLoad(this->filename);
     AddModel(model).execute();
 }

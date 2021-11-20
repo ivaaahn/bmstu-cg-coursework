@@ -6,6 +6,7 @@
 #define __LAB_03_DRAW_MANAGER_HPP__
 
 
+#include <raytracer/raytracer.hpp>
 #include "managers/manager.hpp"
 #include "managers/load/load_manager.hpp"
 #include "objects/model/model_details/point/point.hpp"
@@ -25,15 +26,14 @@ public:
 
     ~DrawManager() override = default;
 
-    void draw(const std::shared_ptr<Scene> &scene);
+    void draw(const std::shared_ptr<Scene> &scene, const std::shared_ptr<Camera> &camera);
 
-    void setDrawer(std::shared_ptr<Drawer> drawer);
-
-    void setCamera(std::shared_ptr<Camera> camera);
+    void setDrawer(std::shared_ptr<Drawer> dr);
+//    void setRayTracer(std::shared_ptr<RayTracer> rt);
 
 private:
     std::shared_ptr<Drawer> drawer;
-    std::shared_ptr<Camera> camera;
+//    std::shared_ptr<RayTracer> raytracer;
 };
 
 class DrawManagerCreator {

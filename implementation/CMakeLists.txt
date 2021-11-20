@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.19)
 project(implementation)
-
+find_package(OpenCL REQUIRED)
+set (CMAKE_PREFIX_PATH "C:\\Qt\\5.15.2\\mingw81_64\\")
+#set (QT_PLUGIN_PATH="C:\\Qt\\5.15.2\\mingw81_64\\plugins")
+#set (QML2_IMPORT_PATH="C:\\Qt\\5.15.2\\mingw81_64\\qml")
 set(COMMANDS
         commands/command.hpp
         commands/camera/camera_commands.cpp
@@ -9,22 +12,12 @@ set(COMMANDS
         commands/model/model_commands.hpp
         commands/scene/scene_commands.cpp
         commands/scene/scene_commands.hpp
-        commands/light/light_commands.cpp commands/light/light_commands.hpp)
-
-
-set(CONFIG_MANAGER
-#        config_manager/creator/config_manager_creator.hpp
-#        config_manager/creator/config_manager_creator.cpp
-#        config_manager/registration/registration_maker.hpp
-#        config_manager/registration/registration_maker.cpp
-#        config_manager/solution/solution.hpp
-#        config_manager/solution/solution.cpp
-#        config_manager/config_manager.hpp
-#        config_manager/config_manager.cpp
+        commands/light/light_commands.cpp commands/light/light_commands.hpp
         )
 
 set(DRAWER
-        drawer/drawer.hpp)
+        drawer/drawer.hpp
+        )
 
 set(EXCEPTIONS
         exceptions/base_exception.hpp
@@ -40,19 +33,6 @@ set(FACADE
         )
 
 set(LOAD
-#        load/builders/camera/camera_builder.cpp
-#        load/builders/camera/camera_builder.hpp
-#        load/builders/model/model_builder.cpp
-#        load/builders/model/model_builder.hpp
-#        load/directors/load_director.hpp
-#        load/directors/camera/camera_director.cpp
-#        load/directors/camera/camera_director.hpp
-#        load/directors/model/model_director.cpp
-#        load/directors/model/model_director.hpp
-#        load/solutions/camera/camera_load_solution.cpp
-#        load/solutions/camera/camera_load_solution.hpp
-#        load/solutions/model/model_load_solution.cpp
-#        load/solutions/model/model_load_solution.hpp
         load/loaders/loader_creator.hpp
         load/loaders/loaders.cpp
         load/loaders/loaders.hpp
@@ -68,8 +48,6 @@ set(MANAGERS
         managers/load/load_manager.hpp
         managers/scene/scene_manager.cpp
         managers/scene/scene_manager.hpp
-#        managers/transform/transform_manager.cpp
-#        managers/transform/transform_manager.hpp
         )
 
 set(OBJECTS
@@ -80,19 +58,13 @@ set(OBJECTS
         objects/camera/camera.hpp
         objects/light/light.cpp
         objects/light/light.hpp
-#        objects/composite/composite.cpp
-#        objects/composite/composite.hpp
-#        objects/model/model.cpp
-#        objects/model/model.hpp
-#        objects/model/model_details/model_details.cpp
-#        objects/model/model_details/model_details.hpp
-#        objects/model/model_details/point/point.hpp
-#        objects/model/model_details/point/point.cpp
-#        objects/model/model_details/edge/edge.hpp
-#        objects/model/model_details/edge/edge.cpp
-        objects/model/figure.cpp objects/model/figure.hpp
-#        objects/model/figure_data.cpp objects/model/figure_data.hpp
-        objects/model/sphere.cpp objects/model/sphere.hpp)
+        objects/model/figure.cpp
+        objects/model/figure.hpp
+        objects/model/sphere.cpp
+        objects/model/sphere.hpp
+        objects/model/model.cpp
+        objects/model/model.hpp
+        )
 
 set(SCENE
         scene/scene.cpp
@@ -101,19 +73,32 @@ set(SCENE
 
 set(MATH
         math/linalg.hpp
-        math/rays.hpp)
+        math/rays.hpp
+        math/rays_handling.cpp
+        math/rays_handling.hpp
+        )
 
-set(VISITOR
-#        visitor/visitor.hpp
-#        visitor/draw_visitor/draw_visitor.cpp
-#        visitor/draw_visitor/draw_visitor.hpp
-        exceptions/camera_exceptions.hpp
-        math/rays_handling.cpp math/rays_handling.hpp)
+set (RAYTRACER
+        raytracer/raytracer.cpp
+        raytracer/raytracer.hpp
+        ../consts.hpp
+        )
+
+set (RAY
+        ray/ray.cpp
+        ray/ray.hpp
+        )
+#set(Boost_USE_STATIC_LIBS OFF)
+#set(Boost_USE_MULTITHREADED ON)
+#set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(OpenCL REQUIRED)
+find_package(OpenMP REQUIRED)
+#find_package(Boost 1.60.0 REQUIRED COMPONENTS filesystem)
+#message(STATUS "Boost version: ${Boost_VERSION}")
 
 
 add_library(${PROJECT_NAME}
         ${COMMANDS}
-        ${CONFIG_MANAGER}
         ${DRAWER}
         ${EXCEPTIONS}
         ${FACADE}
@@ -121,9 +106,18 @@ add_library(${PROJECT_NAME}
         ${MANAGERS}
         ${OBJECTS}
         ${SCENE}
-        ${VISITOR}
         ${MATH}
+        ${RAYTRACER}
+        ${RAY}
+        )
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
+        OpenCL::OpenCL
+        OpenMP::OpenMP_CXX
+#        Boost::filesystem
+        ${REQUIRED_LIBS_QUALIFIED}
         )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ../implementation)
-find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
+
+#find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)

@@ -73,6 +73,12 @@ public:
     ~SphereLoader() override = default;
 };
 
+class TriangularModelLoader : public FigureLoader {
+public:
+    std::shared_ptr<Figure> load(const std::string& filename) override;
+    ~TriangularModelLoader() override = default;
+};
+
 class AnyLoader : public FigureLoader {};
 
 #endif //__LAB_03_FILE_LOADER_HPP__

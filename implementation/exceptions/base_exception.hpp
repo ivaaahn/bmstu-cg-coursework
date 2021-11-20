@@ -7,6 +7,7 @@
 
 #include <exception>
 #include <string>
+#include <ctime>
 
 using string = std::string;
 

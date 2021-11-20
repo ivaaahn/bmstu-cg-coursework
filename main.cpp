@@ -2,7 +2,6 @@
 
 #include <QScreen>
 #include <QStyle>
-
 #include "mainwindow.h"
 
 int main(int argc, char *argv[]) {

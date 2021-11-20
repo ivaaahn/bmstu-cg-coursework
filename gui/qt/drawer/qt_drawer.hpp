@@ -9,9 +9,12 @@
 #include "drawer/drawer.hpp"
 #include "math/linalg.hpp"
 #include <QGraphicsScene>
+#include <QImage>
 #include <memory>
+#include <iostream>
 
 using namespace linalg::aliases;
+using std::cout, std::endl;
 
 class QtDrawer : public Drawer {
 public:
@@ -31,11 +34,26 @@ public:
 
     void updateWithImage() final;
 
+    [[nodiscard]] std::shared_ptr<QImage> getImage() const final {
+        return this->image;
+    }
+
+    void setImage(std::shared_ptr<QImage> value) final {
+//        this->image.reset();
+        uchar *tmp = this->image->bits();
+//        this->image = value;
+        for (int i = 3; i < 22; i += 3)
+        {
+            std::cout << (int)tmp[i - 3] << ' ' << (int)tmp[i - 2] << ' ' << (int)tmp[i - 1] << std::endl;
+        }
+    }
+
+
 private:
     std::shared_ptr<QGraphicsScene> scene;
     std::shared_ptr<QPainter> painter;
 
-    QImage image;
+    std::shared_ptr<QImage> image;
     QPixmap pixmap;
 };
 

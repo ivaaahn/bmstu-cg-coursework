@@ -9,6 +9,7 @@
 //#include <objects/model/model_details/point/point.hpp>
 #include "math/linalg.hpp"
 #include <memory>
+#include <QImage>
 
 using namespace linalg::aliases;
 
@@ -20,13 +21,16 @@ public:
 
 //    virtual void drawLine(const Point &p1, const Point &p2) = 0;
 
-    virtual void putPixel(const int2 &coords, const ColorRGB &color) = 0;
+    virtual void putPixel(const int2& coords, const ColorRGB& color) = 0;
 
     virtual void clearScene() = 0;
 
     virtual void updateScene() = 0;
 
     virtual void updateWithImage() = 0;
+
+    [[nodiscard]] virtual std::shared_ptr<QImage> getImage() const = 0;
+    virtual void setImage(std::shared_ptr<QImage> value) = 0;
 };
 
 class DrawerFactory {

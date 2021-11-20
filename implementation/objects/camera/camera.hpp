@@ -8,9 +8,10 @@
 
 #include <memory>
 #include <fstream>
+#include <ray/ray.hpp>
 
 #include "math/linalg.hpp"
-
+#include <CL/cl.hpp>
 using namespace linalg::aliases;
 
 class Camera {
@@ -27,8 +28,15 @@ public:
 
     [[nodiscard]] const float3& getPos() const;
 
+    [[nodiscard]] std::shared_ptr<Ray> getRay(int w, int h) const;
+
+    [[nodiscard]] cl_float4 clFormat() const {
+        return { cl_float(position.x), cl_float(position.y), cl_float(position.z), cl_float(fov) };
+    }
+
 private:
     float3 position{};
+    float fov = M_PI / 3.;
 };
 
 

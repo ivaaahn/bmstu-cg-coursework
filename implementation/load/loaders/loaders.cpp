@@ -7,6 +7,7 @@
 #include <memory>
 #include <objects/model/sphere.hpp>
 #include <objects/light/light.hpp>
+#include <objects/model/model.hpp>
 #include "loaders.hpp"
 
 //void FileLoader::loadPointsCount(size_t &count) {
@@ -16,7 +17,7 @@
 //        throw FileFormatError(__FILE__, __LINE__, "invalid model-file format");
 //
 //    if (tmp_count < 1)
-//        throw FileFormatError(__FILE__, __LINE__, "number of points is invalid");
+//        throw FileFormatError(__FILE__, __LINE__, "number of _points is invalid");
 //
 //    count = tmp_count;
 //}
@@ -79,4 +80,15 @@ std::shared_ptr<Light> LightLoader::load(const string &filename) {
     this->close();
 
     return light;
+}
+
+std::shared_ptr<Figure> TriangularModelLoader::load(const string& filename) {
+    this->open(filename);
+    //TODO CHECK
+
+    auto fig = std::make_shared<TriangularModel>(this->srcFile);
+
+    this->close();
+
+    return fig;
 }

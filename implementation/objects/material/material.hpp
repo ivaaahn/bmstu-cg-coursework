@@ -7,10 +7,20 @@
 
 #include <memory>
 #include "math/linalg.hpp"
+#include <CL/cl.hpp>
 
 using namespace linalg::aliases;
 
 class Material {
+private:
+    float3 _albedo;
+    float3 _diffuseColor;
+    float _specularExp;
+
+    void _readAlbedo(const std::shared_ptr<std::ifstream>& srcFile);
+    void _readDiffuseColor(const std::shared_ptr<std::ifstream>& srcFile);
+    void _readSpecularExp(std::shared_ptr<std::ifstream> srcFile);
+
 public:
     Material(const float3& albedo, const float3& color, const float& spec) : _albedo(albedo), _diffuseColor(color),
                                                                              _specularExp(spec) {}
@@ -18,8 +28,7 @@ public:
 
     Material() : _albedo(1, 0, 0), _diffuseColor(), _specularExp() {}
 
-
-    explicit Material(std::shared_ptr<std::ifstream> srcFile);
+    explicit Material(const std::shared_ptr<std::ifstream>& srcFile);
 
     const float3& getAlbedo() {
         return this->_albedo;
@@ -33,15 +42,18 @@ public:
         return this->_specularExp;
     }
 
-
-private:
-    float3 _albedo;
-    float3 _diffuseColor;
-    float _specularExp;
-
-    void _readAlbedo(std::shared_ptr<std::ifstream> srcFile);
-    void _readDiffuseColor(std::shared_ptr<std::ifstream> srcFile);
-    void _readSpecularExp(std::shared_ptr<std::ifstream> srcFile);
+    [[nodiscard]] cl_float8 clFormat() const {
+        return {
+            cl_float(_albedo.x),
+            cl_float(_albedo.y),
+            cl_float(_albedo.z),
+            cl_float(_diffuseColor.x),
+            cl_float(_diffuseColor.y),
+            cl_float(_diffuseColor.z),
+            cl_float(_specularExp),
+            0
+        };
+    }
 };
 
 

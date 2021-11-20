@@ -43,7 +43,7 @@ class LoadModel : public ModelCommand {
 public:
     LoadModel() = delete;
 
-    explicit LoadModel(const std::string& filename);
+    explicit LoadModel(std::string  filename);
 
     ~LoadModel() override = default;
 
@@ -58,9 +58,23 @@ class LoadSphere : public ModelCommand {
 public:
     LoadSphere() = delete;
 
-    explicit LoadSphere(const std::string& filename);
+    explicit LoadSphere(std::string  filename);
 
     ~LoadSphere() override = default;
+
+    void execute() override;
+
+private:
+    std::string filename;
+};
+
+class LoadTriangularModel : public ModelCommand {
+public:
+    LoadTriangularModel() = delete;
+
+    explicit LoadTriangularModel(std::string filename);
+
+    ~LoadTriangularModel() override = default;
 
     void execute() override;
 

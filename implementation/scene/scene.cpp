@@ -93,7 +93,7 @@ void Scene::removeCamera(const CamIterator& it) {
 }
 
 void Scene::removeModel(const ModelIterator& it) {
-        //TODO
+    //TODO
 }
 
 void Scene::removeLight(const LightIterator& it) {
@@ -108,19 +108,21 @@ LightIterator Scene::lightsEnd() {
     return this->_lights.end();
 }
 
-bool Scene::isIntersect(const float3& src, const float3& dir, float3 hit, float3& N, Material& material) {
-    float modelsDist = std::numeric_limits<float>::max();
-    for (const auto &model: this->_models)
-    {
-        float currDistance;
+bool Scene::isIntersect(const std::shared_ptr<Ray>& ray, float3& hit, float3& N, Material& material) {
+    float dist = std::numeric_limits<float>::max();
 
-        if (model->rayIntersect(src, dir, currDistance) && currDistance < modelsDist)
+    float currDist;
+    float3 currN, currHit;
+
+    for (const auto& model: this->_models)
+    {
+        if (model->rayIntersect(ray, currDist, currN, currHit) && currDist < dist)
         {
-            modelsDist = currDistance;
-            hit = src + dir * currDistance;
-            N = linalg::normalize((hit - model->getCenter()));
+            dist = currDist;
+            hit = currHit;
+            N = currN;
             material = model->getMaterial();
         }
     }
-    return modelsDist < 1000;
+    return dist < 1000; // TODO ?
 }

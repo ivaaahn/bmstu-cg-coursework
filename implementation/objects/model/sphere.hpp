@@ -11,30 +11,33 @@
 #include "math/linalg.hpp"
 #include "objects/material/material.hpp"
 #include "objects/model/figure.hpp"
+#include <ray/ray.hpp>
 
 
 using namespace linalg::aliases;
 
 class Sphere final : public Figure {
+private:
+    float _radius;
+    void _loadRadius(const std::shared_ptr<std::ifstream>& srcFile);
+    void _loadCenter(const std::shared_ptr<std::ifstream>& srcFile);
+
 public:
     Sphere(const float3& c, float r, const Material& m) : Figure(m, c), _radius(r) {}
 
-    explicit Sphere(std::shared_ptr<std::ifstream> srcFile);
+    explicit Sphere(const std::shared_ptr<std::ifstream>& srcFile);
 
     [[nodiscard]] float getRadius() const { return this->_radius; }
 
-    bool rayIntersect(const float3& source, const float3& dir, float& distTo1stIntersect) const final;
+    bool rayIntersect(const std::shared_ptr<Ray> &ray, float& distTo1stIntersect, float3& N, float3& hit) const final;
 
     void transform(const float3& move, const float3& scale, const float3& rotate) final;
 
+    [[nodiscard]] cl_float4 clFormat() const override {
+        return { cl_float(_center.x), cl_float(_center.y), cl_float(_center.z), cl_float(this->_radius) };
+    }
+
     ~Sphere() final = default;
-
-private:
-    float _radius;
-
-    void _loadRadius(std::shared_ptr<std::ifstream> srcFile);
-
-    void _loadCenter(std::shared_ptr<std::ifstream> srcFile);
 };
 
 

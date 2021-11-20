@@ -4,6 +4,7 @@
 
 #include <exceptions/load_exceptions.hpp>
 #include "camera.hpp"
+#include "../../../consts.hpp"
 
 using linalg::aliases::float3;
 
@@ -26,4 +27,10 @@ Camera::Camera(const std::shared_ptr<std::ifstream>& srcFile) {
         throw FileFormatError(__FILE__, __LINE__, "invalid model-file format");
 
     this->position = float3 {x, y, z};
+}
+
+std::shared_ptr<Ray> Camera::getRay(const int w, const int h) const {
+    float x = (2 * (w + 0.5) / (float)WIDTH - 1) * tan(this->fov / 2.) * WIDTH / (float)HEIGHT;
+    float y = -(2 * (h + 0.5) / (float)HEIGHT - 1) * tan(this->fov / 2.);
+    return std::make_shared<Ray>(this->position, normalize(float3{x, y, -1}));
 }

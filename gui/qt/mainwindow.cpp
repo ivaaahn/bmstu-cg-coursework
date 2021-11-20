@@ -113,8 +113,12 @@ void MainWindow::on_load_model_btn_clicked() {
 
     auto filename = QFileDialog::getOpenFileName();
     if (filename.isNull()) return;
-    auto load_model_cmd = std::make_shared<LoadSphere>(filename.toUtf8().data());
-//    auto load_model_cmd = std::make_shared<LoadModel>(filename.toUtf8().data());
+
+//    Load sphere
+//    auto load_model_cmd = std::make_shared<LoadSphere>(filename.toUtf8().data());
+
+//      Load model
+    auto load_model_cmd = std::make_shared<LoadTriangularModel>(filename.toUtf8().data());
 
     try
     {
@@ -217,7 +221,7 @@ void MainWindow::on_load_camera_btn_clicked() {
 void MainWindow::on_add_camera_btn_clicked() {
     auto r_content = ui->graphicsView->contentsRect();
     auto add_camera_cmd = std::make_shared<AddCamera>(0., 0., 0.);
-//    auto add_camera_cmd = std::make_shared<AddCamera>(-r_content.width() / 2.0, -r_content.height() / 2.0, 0.0);
+//    auto add_camera_cmd = std::make_shared<AddCamera>(-r_content.WIDTH() / 2.0, -r_content.height() / 2.0, 0.0);
 
     try
     {

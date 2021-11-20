@@ -6,15 +6,13 @@
 #include <fstream>
 #include <exceptions/load_exceptions.hpp>
 
-auto a = Material();
-
-Material::Material(std::shared_ptr<std::ifstream> srcFile) {
+Material::Material(const std::shared_ptr<std::ifstream>& srcFile) {
     this->_readAlbedo(srcFile);
     this->_readDiffuseColor(srcFile);
     this->_readSpecularExp(srcFile);
 }
 
-void Material::_readAlbedo(std::shared_ptr<std::ifstream> srcFile) {
+void Material::_readAlbedo(const std::shared_ptr<std::ifstream>& srcFile) {
     float x, y, z;
 
     if (!(*srcFile >> x >> y >> z))
@@ -23,7 +21,7 @@ void Material::_readAlbedo(std::shared_ptr<std::ifstream> srcFile) {
     this->_albedo = float3{x, y, z};
 }
 
-void Material::_readDiffuseColor(std::shared_ptr<std::ifstream> srcFile) {
+void Material::_readDiffuseColor(const std::shared_ptr<std::ifstream>& srcFile) {
     float x, y, z;
 
     if (!(*srcFile >> x >> y >> z))
