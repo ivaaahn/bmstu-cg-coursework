@@ -9,6 +9,8 @@ typedef struct _cl_tag_Sphere {
 typedef struct _cl_tag_Ray {
 	float3 src;
 	float3 dir;
+    float3 invdir;
+    int3 sign;
 } Ray;
 
 typedef struct _cl_tag_Camera {
@@ -105,6 +107,16 @@ void getRay(Ray *ray, int w, int h, int2 dim, Camera *cam) {
 
     ray->src = cam->position;
     ray->dir = normalize((float3)(x, y, -1.0));
+    
+    ray->invdir = 1 / ray->dir;
+
+    // printf("%f %f %f\n", ray->invdir.x, ray->invdir.y, ray->invdir.z);
+
+    ray->sign.x = (ray->invdir.x < 0);
+    ray->sign.y = (ray->invdir.y < 0);
+    ray->sign.z = (ray->invdir.z < 0);
+
+    // printf("%d %d %d\n", ray->sign.x, ray->sign.y, ray->sign.z);
 }
 
 float length2(float3 v) {
@@ -140,6 +152,35 @@ bool sphereIsIntersect(const Sphere *sphere, const Ray *ray, float *distTo1stInt
 
     return true;
 }
+
+bool rayBoxIntersect(global const RawFigure *fig, const Ray *r) {
+    float tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+    tmin = (fig->box_bounds[r->sign.s0].x - r->src.x) * r->invdir.x;
+    tmax = (fig->box_bounds[1-r->sign.s0].x - r->src.x) * r->invdir.x;
+    tymin = (fig->box_bounds[r->sign.s1].y - r->src.y) * r->invdir.y;
+    tymax = (fig->box_bounds[1-r->sign.s1].y - r->src.y) * r->invdir.y;
+
+    if ((tmin > tymax) || (tymin > tmax))
+        return false;
+    if (tymin > tmin)
+        tmin = tymin;
+    if (tymax < tmax)
+        tmax = tymax;
+
+    tzmin = (fig->box_bounds[r->sign.s2].z - r->src.z) * r->invdir.z;
+    tzmax = (fig->box_bounds[1-r->sign.s2].z - r->src.z) * r->invdir.z;
+
+    if ((tmin > tzmax) || (tzmin > tmax))
+        return false;
+    if (tzmin > tmin)
+        tmin = tzmin;
+    if (tzmax < tmax)
+        tmax = tzmax;
+
+    return true;
+}
+
 
 
 #define EPS 1e-5
@@ -193,7 +234,7 @@ float3 getTriangleNormal(global const RawFigure *fig, const int3 face, const Ray
 
 
 bool rayTriangleModelIntersect(global const RawFigure *fig, const Ray *ray, float *distTo1stIntersect, float3 *N, float3 *hit) {
-    // if (!this->_rayBoxIntersect(ray)) return false;
+    if (!rayBoxIntersect(fig, ray)) return false;
 
     // printf("rayTriangleModelIntersect() start...\n");
     

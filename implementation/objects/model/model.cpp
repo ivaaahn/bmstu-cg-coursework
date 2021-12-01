@@ -226,9 +226,9 @@ raw_figure TriangularModel::clFormat() const {
 
     for (int i = 0; i < 2; ++i)
     {
-        res.box_bounds[0].x = this->_box_bounds[0].x;
-        res.box_bounds[0].y = this->_box_bounds[0].y;
-        res.box_bounds[0].z = this->_box_bounds[0].z;
+        res.box_bounds[i].x = this->_box_bounds[i].x;
+        res.box_bounds[i].y = this->_box_bounds[i].y;
+        res.box_bounds[i].z = this->_box_bounds[i].z;
     }
 
     return res;
