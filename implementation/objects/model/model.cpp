@@ -193,14 +193,15 @@ bool TriangularModel::_rayBoxIntersect(const std::shared_ptr<Ray>& r) const {
     tzmin = (this->_box_bounds[r->sign[2]].z - r->src.z) * r->invdir.z;
     tzmax = (this->_box_bounds[1-r->sign[2]].z - r->src.z) * r->invdir.z;
 
-    if ((tmin > tzmax) || (tzmin > tmax))
-        return false;
-    if (tzmin > tmin)
-        tmin = tzmin;
-    if (tzmax < tmax)
-        tmax = tzmax;
-
-    return true;
+//    if ((tmin > tzmax) || (tzmin > tmax))
+//        return false;
+//    if (tzmin > tmin)
+//        tmin = tzmin;
+//    if (tzmax < tmax)
+//        tmax = tzmax;
+//
+//    return true;
+    return ((tmin <= tzmax) && (tzmin <= tmax));
 }
 
 raw_figure TriangularModel::clFormat() const {

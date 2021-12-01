@@ -171,14 +171,15 @@ bool rayBoxIntersect(global const RawFigure *fig, const Ray *r) {
     tzmin = (fig->box_bounds[r->sign.s2].z - r->src.z) * r->invdir.z;
     tzmax = (fig->box_bounds[1-r->sign.s2].z - r->src.z) * r->invdir.z;
 
-    if ((tmin > tzmax) || (tzmin > tmax))
-        return false;
-    if (tzmin > tmin)
-        tmin = tzmin;
-    if (tzmax < tmax)
-        tmax = tzmax;
+    // if ((tmin > tzmax) || (tzmin > tmax))
+    //     return false;
+    // if (tzmin > tmin)
+    //     tmin = tzmin;
+    // if (tzmax < tmax)
+    //     tmax = tzmax;
 
-    return true;
+    // return true;
+    return ((tmin <= tzmax) && (tzmin <= tmax));
 }
 
 
