@@ -33,8 +33,12 @@ public:
 
     void transform(const float3& move, const float3& scale, const float3& rotate) final;
 
-    [[nodiscard]] cl_float4 clFormat() const override {
-        return { cl_float(_center.x), cl_float(_center.y), cl_float(_center.z), cl_float(this->_radius) };
+//    [[nodiscard]] cl_float4 clFormat() const override {
+//        return { cl_float(_center.x), cl_float(_center.y), cl_float(_center.z), cl_float(this->_radius) };
+//    }
+
+    [[nodiscard]] raw_figure clFormat() const override {
+        return raw_figure {};
     }
 
     ~Sphere() final = default;

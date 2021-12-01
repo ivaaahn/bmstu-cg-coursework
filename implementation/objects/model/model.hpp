@@ -57,7 +57,7 @@ public:
 
     void transform(const float3& move, const float3& scale, const float3& rotate) override {}
 
-    [[nodiscard]] cl_float4 clFormat() const override { return cl_float4 (); }
+    [[nodiscard]] raw_figure clFormat() const override;
 
     ~TriangularModel() override = default;
 

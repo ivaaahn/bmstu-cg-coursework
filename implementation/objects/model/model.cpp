@@ -203,6 +203,37 @@ bool TriangularModel::_rayBoxIntersect(const std::shared_ptr<Ray>& r) const {
     return true;
 }
 
+raw_figure TriangularModel::clFormat() const {
+    raw_figure res;
+
+    res.num_of_points = this->numOfPoints();
+    res.num_of_faces = this->numOfFaces();
+
+    for (int i = 0; i < this->numOfPoints(); ++i)
+    {
+        res.points[i].x = this->_points[i].x;
+        res.points[i].y = this->_points[i].y;
+        res.points[i].z = this->_points[i].z;
+    }
+
+    for (int i = 0; i < this->numOfFaces(); ++i)
+    {
+        res.faces[i].x = this->_faces[i].verts.x;
+        res.faces[i].y = this->_faces[i].verts.y;
+        res.faces[i].z = this->_faces[i].verts.z;
+    }
+
+
+    for (int i = 0; i < 2; ++i)
+    {
+        res.box_bounds[0].x = this->_box_bounds[0].x;
+        res.box_bounds[0].y = this->_box_bounds[0].y;
+        res.box_bounds[0].z = this->_box_bounds[0].z;
+    }
+
+    return res;
+}
+
 
 
 //Sphere::Sphere(const std::shared_ptr<std::ifstream>& srcFile) {

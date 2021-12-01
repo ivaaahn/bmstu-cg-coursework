@@ -20,8 +20,8 @@ void DrawManager::setDrawer(std::shared_ptr<Drawer> dr) {
 
 void DrawManager::draw(const std::shared_ptr<Scene> &scene, const std::shared_ptr<Camera> &cam) {
     auto raytracer = RayTracerCreator().get();
-    raytracer->cpuRender(scene, cam, this->drawer);
-//    raytracer->gpuRender(scene, cam, this->drawer);
+//    raytracer->cpuRender(scene, cam, this->drawer);
+    raytracer->gpuRender(scene, cam, this->drawer);
 }
 
 

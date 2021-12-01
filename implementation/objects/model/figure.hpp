@@ -12,7 +12,16 @@
 #include <CL/cl.hpp>
 using namespace linalg::aliases;
 
+#define NN 1000
 
+// TODO add material support
+typedef struct __attribute__ ((packed)) _raw_figure {
+    cl_float3 points[NN];
+    cl_int3 faces[NN];
+    cl_float3 box_bounds[2];
+    cl_int num_of_points;
+    cl_int num_of_faces;
+} raw_figure;
 
 
 class Figure {
@@ -23,22 +32,19 @@ protected:
 public:
     Figure(const Material& m, const float3 &center) : _material(m), _center(center) {}
 
-//    Figure(std::shared_ptr<std::ifstream> srcFile) = 0;
-
     Figure() = default;
 
     virtual bool rayIntersect(const std::shared_ptr<Ray>& ray, float& distTo1stIntersect, float3& N, float3& hit) const = 0;
 
     virtual void transform(const float3& move, const float3& scale, const float3& rotate) = 0;
 
-    virtual cl_float4 clFormat() const = 0;
+    virtual raw_figure clFormat() const = 0;
 
     virtual ~Figure() = 0;
 
     [[nodiscard]] const Material& getMaterial() const { return this->_material; }
 
     [[nodiscard]] const float3& getCenter() const { return this->_center; }
-
 
     cl_float8 clMaterial() const { return _material.clFormat(); }
 };
