@@ -1,40 +1,49 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
 // Define C++ Classes as OpenCL structs
-typedef struct _cl_tag_Sphere {
+typedef struct __attribute__ ((packed)) _cl_tag_Sphere {
     float3 center;
     float radius;
 } Sphere;
 
-typedef struct _cl_tag_Ray {
+typedef struct __attribute__ ((packed)) _cl_tag_Ray {
 	float3 src;
 	float3 dir;
     float3 invdir;
     int3 sign;
 } Ray;
 
-typedef struct _cl_tag_Camera {
+typedef struct __attribute__ ((packed)) _cl_tag_Light {
+	float3 position;
+    float intensity;
+} Light;
+
+
+typedef struct __attribute__ ((packed)) _cl_tag_Camera {
     float3 position;
 	float fov;
 } Camera;
 
-#define NN 1000
 
-typedef struct _cl_tag_RawFigure {
-    float3 points[NN];
-    int3 faces[NN];
+
+typedef struct __attribute__ ((packed)) _cl_tag_Material {
+    float3 albedo;
+	float3 diffuseColor;
+	float specularExp;
+} Material;
+
+#define NP 5000
+#define NF 8000
+
+typedef struct __attribute__ ((packed)) _cl_tag_RawFigure {
+    float3 points[NP];
+    int3 faces[NF];
     float3 box_bounds[2];
     int num_of_points;
     int num_of_faces;
+    Material material;
 } RawFigure;
 
-
-
-// typedef struct _cl_tag_Material {
-//     float3 albedo;
-// 	float3 diffuseColor;
-// 	float3 specularExp;
-// } Material;
 
 
 // float3 getReflectionVector(float3 I, float3 N) {
@@ -101,12 +110,18 @@ typedef struct _cl_tag_RawFigure {
 // 	return (Ray) { (double3)(vOrigin + vOffset), (double3)(vLowerLeftCorner + (s * vHorizontal) + (t * vVertical) - vOrigin - vOffset) };
 // }
 
+
 void getRay(Ray *ray, int w, int h, int2 dim, Camera *cam) {
-    float x = (2 * (w + 0.5) / (float)dim.s0 - 1) * tan(cam->fov / 2.) * dim.s0 / (float)dim.s1;
-    float y = -(2 * (h + 0.5) / (float)dim.s1 - 1) * tan(cam->fov / 2.);
+    float x = w + 0.5 - dim.s0 / 2.;
+    float y = -(h + 0.5) + dim.s1 / 2.;
+    float z = -dim.s1 / (2. * tan(cam->fov / 2.));
+
+
+    // float x = (2 * (w + 0.5) / (float)dim.s0 - 1) * tan(cam->fov / 2.) * dim.s0 / (float)dim.s1;
+    // float y = -(2 * (h + 0.5) / (float)dim.s1 - 1) * tan(cam->fov / 2.);
 
     ray->src = cam->position;
-    ray->dir = normalize((float3)(x, y, -1.0));
+    ray->dir = normalize((float3)(x, y, z)); 
     
     ray->invdir = 1 / ray->dir;
 
@@ -121,6 +136,10 @@ void getRay(Ray *ray, int w, int h, int2 dim, Camera *cam) {
 
 float length2(float3 v) {
 	return dot(v, v);
+}
+
+float distance2(float3 a, float3 b) {
+	return length2(b-a);
 }
 
 bool sphereIsIntersect(const Sphere *sphere, const Ray *ray, float *distTo1stIntersect) {
@@ -265,8 +284,7 @@ bool rayTriangleModelIntersect(global const RawFigure *fig, const Ray *ray, floa
 
 
 
-
-bool sceneIsIntersect(global const RawFigure *figList, const int listLen, const Ray *ray) {
+bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray *ray, float3 *hit, float3 *N, Material *mat) {
     // printf("sceneIsIntersect() start...\n");
 
     float figuresDist = MAXFLOAT;
@@ -274,51 +292,134 @@ bool sceneIsIntersect(global const RawFigure *figList, const int listLen, const 
     float currDist;
     float3 currN, currHit;
 
-    for (int i = 0; i < listLen; ++i)
+    for (int i = 0; i < flLen; ++i)
     {
         // Sphere sphere = { (float3)(figList[i].s0, figList[i].s1, figList[i].s2), (float)figList[i].s3 };
 
 
-        if (rayTriangleModelIntersect(&figList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
+        if (rayTriangleModelIntersect(&fList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
         {
             figuresDist = currDist;
-            // hit = ray->src + ray->dir * currDist;
+            *hit = currHit;
+            *N = currN;
+            *mat = fList[i].material;
         }
 
     }
+
+    float checkerboard_dist = MAXFLOAT;
+    if (fabs(ray->dir.y) > EPS)
+    {
+        float d = -(ray->src.y + 4) / ray->dir.y; // the checkerboard plane has equation y = -4
+        float3 pt = ray->src + ray->dir * d;
+ 
+        if (d > EPS && fabs(pt.x) < 10 && pt.z < -10 && pt.z > -30 && d < figuresDist) 
+        {
+            checkerboard_dist = d;
+            *hit = pt;
+            *N = (float3)(0, 1, 0);
+            mat->diffuseColor = ((int)(0.5 * hit->x + 1000) + (int)(0.5 * hit->z)) & 1 ? (float3)(.3, .3, .3) : (float3)(.3, .2, .1);
+            // mat->diffuseColor *= 0.3;
+        }
+    }
+
+    return min(figuresDist, checkerboard_dist) < 1000;
+
+
     // printf("sceneIsIntersect(): [2] figuresDist == %f", figuresDist);
 
-    return figuresDist < 1000;
+    // return figuresDist < 1000;
 }
 
 
-float3 getColor(global const RawFigure *figList, const int figlistLen, const Ray *ray) {
-	float sphereDist = MAXFLOAT;
+float3 getReflectionVector(const float3 I, const float3 N) {
+    return I - N * 2.f * dot(I, N);
+}
 
-	if (!sceneIsIntersect(figList, figlistLen, ray))
+float3 getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, const Ray *ray, int depth) {
+	// float sphereDist = MAXFLOAT;
+
+    // if (depth > 1)
+        // printf("depth = %d\n", depth);
+
+    float3 hit, N;
+    Material material;
+    Ray tmp_ray;
+
+
+	if (!sceneIsIntersect(fList, flLen, ray, &hit, &N, &material))
     {
-        // printf("NOT INTERSECT");
+        // if (depth == 4)
+            // printf("return...\n\n");
 		return (float3)(0.2, 0.7, 0.8); // BG color
     }
+    // FOR MIRROR
+    float3 reflectDir = normalize(getReflectionVector(ray->dir, N));
+    float3 reflectSrc = dot(reflectDir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
 
+    // tmp_ray.src = reflectSrc;
+    // tmp_ray.dir = reflectDir;
+
+    float3 reflect_color = getColor(fList, flLen, lList, llLen, &tmp_ray, depth + 1);
+
+    float diffuseLightIntensity = 0, specularLightIntensity = 0;
+    global const Light *light = 0;
+    // Lights
+    for (int i = 0; i < llLen; ++i)
+    {
+        light = lList + i;
+
+        float3 lightDir = normalize((light->position - hit));
+        float lightDist = distance2(light->position, h *-it);
+
+        // checking if the point lies in the shadow of the light
+        float3 shadowSrc = dot(lightDir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
+        float3 shadowHit, shadowN;
+
+        tmp_ray.src = shadowSrc;
+        tmp_ray.dir = lightDir;
+        Material tmpMaterial;
+        if (sceneIsIntersect(fList, flLen, &tmp_ray, &shadowHit, &shadowN, &tmpMaterial) &&
+            distance2(shadowHit, shadowSrc) < lightDist)
+            continue;
+
+        diffuseLightIntensity += light->intensity * max(0.f, dot(lightDir, N));
+
+        float3 reflect_vector = getReflectionVector(-lightDir, N);
+
+        specularLightIntensity +=
+                pown(max(0.f, dot(-reflect_vector, ray->dir)), material.specularExp) *
+                light->intensity;
+    }
+
+    float3 alb = material.albedo;
+
+    return material.diffuseColor * diffuseLightIntensity * alb.s0
+           + (float3)(1., 1., 1.) * specularLightIntensity * alb.s1;
+        //    + reflect_color * alb.s2;
 
     // printf("INTERSECT\n");
     
-    return (float3)(0.4, 0.4, 0.3);
+    // return (float3)(0.4, 0.4, 0.3);
 }
 
 kernel void Render(global uchar *pixels,
                    global const RawFigure *figList,
-                   global const float8 *materials,
+                   global const Light *lightList,
+                //    global const float8 *materials,
                    global const float4 *cam,
                    global const int2 *dims,
-                   global const int *listLen) {
+                   global const int *flLen,
+                   global const int *llLen) {
 
     // printf("Render() start...\n");
     
     int gid = get_global_id(0); // Current ray in image
 	int2 dim = dims[0]; // Image Dimensions
-	int figListLen = listLen[0]; // objects in list
+	int figListLen = flLen[0]; // objects in list
+	int lightListLen = llLen[0]; // lights in list
+    // printf("L == %d\n\n", lightList[0].intensity);
+    // printf("num_of_lights == %d\n", lightListLen);
 
     // printf("num_of_points == %d", figList[0].num_of_points);
     // printf("num_of_faces == %d", figList[0].num_of_faces);
@@ -331,6 +432,11 @@ kernel void Render(global uchar *pixels,
     Ray ray;
     getRay(&ray, i, j, dim, &camera);
 
+    // printf("Material: (%f, %f, %f), (%f, %f, %f), %f\n",
+    //  figList[0].material.albedo.x, figList[0].material.albedo.y, figList[0].material.albedo.z,
+    //  figList[0].material.diffuseColor.x, figList[0].material.diffuseColor.y, figList[0].material.diffuseColor.z,
+    //  figList[0].material.specularExp);
+
     // printf("figList[0].faces[0].s0 = %d\n", figList[0].faces[0].s0);
     // printf("figList[0].faces[0].s1 = %d\n", figList[0].faces[0].s1);
     // printf("figList[0].faces[0].s2 = %d\n\n", figList[0].faces[0].s2);
@@ -342,13 +448,10 @@ kernel void Render(global uchar *pixels,
 
 	// Sphere sphere = { (float3)(figList[gid].s0, figList[gid].s1, figList[gid].s2), (float)figList[gid].s3 };
 
-    float3 c = getColor(figList, figListLen, &ray);
+    float3 c = getColor(figList, figListLen, lightList, lightListLen, &ray, 0);
 
     float max_ = max(c.s0, max(c.s1, c.s2));
-    if (max_ > 1)
-    {
-        c *= (1.f / max_);
-    }
+    if (max_ > 1) c *= (1.f / max_);
 
     c[0] = max(0.f, min(1.f, c.s0));
     c[1] = max(0.f, min(1.f, c.s1));
