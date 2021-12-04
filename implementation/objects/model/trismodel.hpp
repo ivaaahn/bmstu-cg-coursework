@@ -29,8 +29,11 @@ private:
     std::vector<float3> _points;
     std::vector<Triangle> _faces;
     float3 _box_bounds[2] = {};
+    float3 _corners[8] = {};
 
     bool _rayFaceIntersect(const std::shared_ptr<Ray> &ray, const Triangle& face, float &ray_tvalue) const;
+    void _updCorners();
+    void _createBox();
 //    void _loadPoints(const std::shared_ptr<std::ifstream>& srcFile);
 //    void _loadFaces(const std::shared_ptr<std::ifstream>& srcFile);
     [[nodiscard]] bool _rayBoxIntersect(const std::shared_ptr<Ray>& ray) const;
@@ -38,7 +41,13 @@ private:
 public:
     explicit TriangularModel(const std::shared_ptr<std::ifstream>& srcFile);
 
+    [[nodiscard]] float3 getBoxCenter() const {
+        auto center = float3{0.};
+        for (const auto &p: this->_corners)
+            center += p;
 
+        return center / 8;
+    }
 
     [[nodiscard]] int numOfPoints() const;
     [[nodiscard]] int numOfFaces() const;
@@ -48,14 +57,12 @@ public:
 
     [[nodiscard]] const Triangle& getFace(int face_idx) const;
 
-    void getBox(float3& p_min, float3& p_max);
 
     bool rayIntersect(const std::shared_ptr<Ray>& ray, float& distTo1stIntersect, float3& N, float3& hit) const override;
 
     [[nodiscard]] float3 getNormal(const Triangle& face, const std::shared_ptr<Ray>& ray) const;
 
-
-    void transform(const float3& move, const float3& scale, const float3& rotate) override {}
+    void transform(const float3& move, const float3& scale, const float3& rotate) override;
 
     [[nodiscard]] raw_figure clFormat() const override;
 

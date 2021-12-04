@@ -2,11 +2,13 @@
 // Created by ivaaahn on 23.05.2021.
 //
 
-#include "model.hpp"
+#include "trismodel.hpp"
 #include <cassert>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+
+
 #define EPS 1e-5
 
 
@@ -33,33 +35,59 @@ const Triangle& TriangularModel::getFace(int face_idx) const {
     return this->_faces[face_idx];
 }
 
-void TriangularModel::getBox(float3& p_min, float3& p_max) {
-    p_min = p_max = this->_points[0];
+void TriangularModel::_updCorners() {
+    auto pmin = this->_box_bounds[0];
+    auto pmax = this->_box_bounds[1];
 
-    for (int point_idx = 1; point_idx < this->numOfPoints(); ++point_idx)
-    {
-        for (int axis_idx = 0; axis_idx < 3; ++axis_idx)
-        {
-            p_min[axis_idx] = std::min(p_min[axis_idx], this->_points[point_idx][axis_idx]);
-            p_max[axis_idx] = std::max(p_max[axis_idx], this->_points[point_idx][axis_idx]);
+    _corners[0] = pmin;
+    _corners[1] = float3{pmin.x, pmin.y, pmax.z};
+    _corners[2] = float3{pmin.x, pmax.y, pmin.z};
+    _corners[3] = float3{pmax.x, pmin.y, pmin.z};
+    _corners[4] = float3{pmin.x, pmax.y, pmax.z};
+    _corners[5] = float3{pmax.x, pmin.y, pmax.z};
+    _corners[6] = float3{pmax.x, pmax.y, pmin.z};
+    _corners[7] = pmax;
+}
+
+void TriangularModel::_createBox() {
+    auto p_min = float3{1.} * std::numeric_limits<float>::max();
+    auto p_max = float3{1.} * std::numeric_limits<float>::min();
+
+    for (const auto& p: this->_points) {
+        for (int i = 0; i < 3; ++i) {
+            p_min[i] = std::min(p_min[i], p[i]);
+            p_max[i] = std::max(p_max[i], p[i]);
         }
     }
+
+
+//    for (int point_idx = 1; point_idx < this->numOfPoints(); ++point_idx)
+//    {
+//        for (int axis_idx = 0; axis_idx < 3; ++axis_idx)
+//        {
+//            p_min[axis_idx] = std::min(p_min[axis_idx], this->_points[point_idx][axis_idx]);
+//            p_max[axis_idx] = std::max(p_max[axis_idx], this->_points[point_idx][axis_idx]);
+//        }
+//    }
+
+    this->_box_bounds[0] = p_min;
+    this->_box_bounds[1] = p_max;
 
     std::cerr << "bbox: [ (" << p_min[0] << ", " << p_min[1] << ", " << p_min[2] << ") : (" << p_max[0] << ", "
               << p_max[1] << ", " << p_max[2] << ") ]" << std::endl;
 }
 
-bool TriangularModel::rayIntersect(const std::shared_ptr<Ray>& ray, float& distTo1stIntersect, float3& N, float3& hit) const {
+bool TriangularModel::rayIntersect(const std::shared_ptr<Ray>& ray, float& distTo1stIntersect, float3& N,
+                                   float3& hit) const {
     if (!this->_rayBoxIntersect(ray)) return false;
+
 
     float faceDist = std::numeric_limits<float>::max();
     float currDist;
     Triangle face;
 
-    for (const auto & currFace : this->_faces)
-    {
-        if (this->_rayFaceIntersect(ray, currFace, currDist) && currDist < faceDist)
-        {
+    for (const auto& currFace: this->_faces) {
+        if (this->_rayFaceIntersect(ray, currFace, currDist) && currDist < faceDist) {
             faceDist = currDist;
             face = currFace;
         }
@@ -74,7 +102,8 @@ bool TriangularModel::rayIntersect(const std::shared_ptr<Ray>& ray, float& distT
     return true;
 }
 
-bool TriangularModel::_rayFaceIntersect(const std::shared_ptr<Ray>& ray, const Triangle& face, float& ray_tvalue) const {
+bool
+TriangularModel::_rayFaceIntersect(const std::shared_ptr<Ray>& ray, const Triangle& face, float& ray_tvalue) const {
 //  find vectors for two edges sharing vertex[0]
     float3 edge1 = getPoint(face.verts[1]) - getPoint(face.verts[0]);
     float3 edge2 = getPoint(face.verts[2]) - getPoint(face.verts[0]);
@@ -113,14 +142,12 @@ float3 TriangularModel::getNormal(const Triangle& face, const std::shared_ptr<Ra
 
     auto n = linalg::normalize(linalg::cross(edge1, edge2));
 
-    if (linalg::dot(n, ray->dir) < 0)
-    {
+    if (linalg::dot(n, ray->dir) < 0) {
         n *= -1;
     }
 
     return n;
 }
-
 
 
 TriangularModel::TriangularModel(const std::shared_ptr<std::ifstream>& srcFile) {
@@ -130,58 +157,67 @@ TriangularModel::TriangularModel(const std::shared_ptr<std::ifstream>& srcFile) 
     while (!srcFile->eof()) {
         std::getline(*srcFile, line);
         std::istringstream iss(line);
-        std::cout << line << std::endl;
         char trash;
         if (!line.compare(0, 2, "v ")) {
             iss >> trash;
             float3 v;
-            for (int i = 0; i < 3; i++)
-            {
+            for (int i = 0; i < 3; i++) {
                 iss >> v[i];
             }
 
             this->_points.push_back(v);
-
         }
-        else if (!line.compare(0, 2, "f "))
-        {
+        else if (!line.compare(0, 2, "f ")) {
             int3 f;
             int idx, cnt = 0;
             iss >> trash;
-            while (iss >> idx)
-            {
+            while (iss >> idx) {
                 idx--; // in wavefront obj all indices start at 1, not zero
                 f[cnt++] = idx;
             }
-            if (cnt == 3)
-            {
+            if (cnt == 3) {
                 this->_faces.emplace_back(f);
             }
         }
-        else
-        {
+        else {
             break;
         }
     }
 
+//    for (int i=0; i<this->numOfFaces(); ++i) {
+//        if (this->_faces[i].verts.x < 0) this->_faces[i].verts.x += this->numOfFaces();
+//        if (this->_faces[i].verts.y < 0) this->_faces[i].verts.y += this->numOfFaces();
+//        if (this->_faces[i].verts.z < 0) this->_faces[i].verts.z += this->numOfFaces();
+//    }
+//
+//    for (int i=0; i<this->numOfPoints(); ++i)
+//    {
+//        std::cout << this->_points[i].x << std::endl;
+//        this->_points[i] *= 5;
+//        std::cout << this->_points[i].x << std::endl;
+//
+//    }
+
+
     this->_material = Material(srcFile);
-    std::cerr << "# v# " << this->_points.size() << " f# "  << this->_faces.size() << std::endl;
+    std::cerr << "# v# " << this->_points.size() << " f# " << this->_faces.size() << std::endl;
 
 
-    float3 p_min, p_max;
-    this->getBox(p_min, p_max);
+//    float3 p_min, p_max;/
+    this->_createBox();
+    this->_updCorners();
 
-    this->_box_bounds[0] = p_min;
-    this->_box_bounds[1] = p_max;
+//    this->_box_bounds[0] = p_min;
+//    this->_box_bounds[1] = p_max;
 }
 
 bool TriangularModel::_rayBoxIntersect(const std::shared_ptr<Ray>& r) const {
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
     tmin = (this->_box_bounds[r->sign[0]].x - r->src.x) * r->invdir.x;
-    tmax = (this->_box_bounds[1-r->sign[0]].x - r->src.x) * r->invdir.x;
+    tmax = (this->_box_bounds[1 - r->sign[0]].x - r->src.x) * r->invdir.x;
     tymin = (this->_box_bounds[r->sign[1]].y - r->src.y) * r->invdir.y;
-    tymax = (this->_box_bounds[1-r->sign[1]].y - r->src.y) * r->invdir.y;
+    tymax = (this->_box_bounds[1 - r->sign[1]].y - r->src.y) * r->invdir.y;
 
     if ((tmin > tymax) || (tymin > tmax))
         return false;
@@ -191,7 +227,7 @@ bool TriangularModel::_rayBoxIntersect(const std::shared_ptr<Ray>& r) const {
         tmax = tymax;
 
     tzmin = (this->_box_bounds[r->sign[2]].z - r->src.z) * r->invdir.z;
-    tzmax = (this->_box_bounds[1-r->sign[2]].z - r->src.z) * r->invdir.z;
+    tzmax = (this->_box_bounds[1 - r->sign[2]].z - r->src.z) * r->invdir.z;
 
 //    if ((tmin > tzmax) || (tzmin > tmax))
 //        return false;
@@ -210,29 +246,102 @@ raw_figure TriangularModel::clFormat() const {
     res.num_of_points = this->numOfPoints();
     res.num_of_faces = this->numOfFaces();
 
-    for (int i = 0; i < this->numOfPoints(); ++i)
-    {
+    for (int i = 0; i < this->numOfPoints(); ++i) {
         res.points[i].x = this->_points[i].x;
         res.points[i].y = this->_points[i].y;
         res.points[i].z = this->_points[i].z;
     }
 
-    for (int i = 0; i < this->numOfFaces(); ++i)
-    {
+    for (int i = 0; i < this->numOfFaces(); ++i) {
         res.faces[i].x = this->_faces[i].verts.x;
         res.faces[i].y = this->_faces[i].verts.y;
         res.faces[i].z = this->_faces[i].verts.z;
     }
 
 
-    for (int i = 0; i < 2; ++i)
-    {
+    for (int i = 0; i < 2; ++i) {
         res.box_bounds[i].x = this->_box_bounds[i].x;
         res.box_bounds[i].y = this->_box_bounds[i].y;
         res.box_bounds[i].z = this->_box_bounds[i].z;
     }
 
+    res.material = this->clMaterial();
+
     return res;
+}
+
+inline double toRad(const float angle) {
+    return angle * (M_PI / 180);
+}
+
+void move(float3& p, float dx, float dy, float dz) {
+    p.x += dx;
+    p.y += dy;
+    p.z += dz;
+}
+
+void rotateX(float3& p, float ax) {
+    auto _cos = (float)cos(toRad(ax));
+    auto _sin = (float)sin(toRad(ax));
+    float _y = p.y;
+
+    p.y = static_cast<float>(p.y * _cos - p.z * _sin);
+    p.z = static_cast<float>(p.z * _cos + _y * _sin);
+}
+
+void rotateY(float3& p, float ay) {
+    auto _cos = (float)cos(toRad(ay));
+    auto _sin = (float)sin(toRad(ay));
+    float _x = p.x;
+
+    p.x = p.x * _cos - p.z * _sin;
+    p.z = p.z * _cos + _x * _sin;
+}
+
+void rotateZ(float3& p, float az) {
+    const double _cos = cos(toRad(az));
+    const double _sin = sin(toRad(az));
+    const double _x = p.x;
+
+    p.x = p.x * _cos - p.y * _sin;
+    p.y = p.y * _cos + _x * _sin;
+}
+
+
+void TriangularModel::transform(const float3& move, const float3& scale, const float3& rotate) {
+    auto center = this->getBoxCenter();
+
+    std::cout << "center = (" << center.x << ' ' << center.y << ' ' << center.z << ')' << std::endl;
+
+//#pragma omp parallel for num_threads(8)
+    for (auto& point: this->_points) {
+        point -= center;
+        rotateX(point, rotate.x);
+        rotateY(point, rotate.y);
+        rotateZ(point, rotate.z);
+        point += center;
+    }
+
+    auto bbox_pmin_new = float3{1.} * std::numeric_limits<float>::max();
+    auto bbox_pmax_new = float3{1.} * std::numeric_limits<float>::min();
+
+    for (auto& point: this->_corners) {
+        point -= center;
+        rotateX(point, rotate.x);
+        rotateY(point, rotate.y);
+        rotateZ(point, rotate.z);
+        point += center;
+
+        for (int i = 0; i < 3; ++i) {
+            bbox_pmin_new[i] = std::min(bbox_pmin_new[i], point[i]);
+            bbox_pmax_new[i] = std::max(bbox_pmax_new[i], point[i]);
+        }
+    }
+
+    this->_box_bounds[0] = bbox_pmin_new;
+    this->_box_bounds[1] = bbox_pmax_new;
+
+//    this->_updCorners();
 }
 
 
