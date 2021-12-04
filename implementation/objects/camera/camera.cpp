@@ -20,6 +20,13 @@ const float3& Camera::getPos() const {
     return this->position;
 }
 
+void Camera::getPos(float &x, float &y, float &z) {
+    x = this->position.x;
+    y = this->position.y;
+    z = this->position.z;
+}
+
+
 Camera::Camera(const std::shared_ptr<std::ifstream>& srcFile) {
     float x, y, z;
 
