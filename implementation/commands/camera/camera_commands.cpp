@@ -4,6 +4,7 @@
 
 #include "camera_commands.hpp"
 #include <memory>
+#include <utility>
 #include "objects/camera/camera.hpp"
 #include "math/linalg.hpp"
 #include "managers/scene/scene_manager.hpp"
@@ -13,7 +14,7 @@ using linalg::aliases::float3;
 
 AddCamera::AddCamera(float xPos, float yPos, float zPos) : xPos(xPos), yPos(yPos), zPos(zPos) {}
 
-LoadCamera::LoadCamera(const std::string& filename) : filename(std::move(filename)) {}
+//LoadCamera::LoadCamera(std::string filename) : filename(std::move(filename)) {}
 
 MoveCamera::MoveCamera(size_t cameraId, float shiftX, float shiftY, float shiftZ = 0)
         : cameraId(cameraId), shiftX(shiftX), shiftY(shiftY), shiftZ(shiftZ) {}
@@ -33,13 +34,13 @@ void AddCamera::execute() {
 }
 
 
-void LoadCamera::execute() {
-    auto loadManager = LoadManagerCreator().getManager();
-    auto sceneManager = SceneManagerCreator().getManager();
-
-    auto camera = loadManager->cameraLoad(this->filename);
-    sceneManager->getScene()->addCamera(camera);
-}
+//void LoadCamera::execute() {
+//    auto loadManager = LoadManagerCreator().getManager();
+//    auto sceneManager = SceneManagerCreator().getManager();
+//
+//    auto camera = loadManager->cameraLoad(this->filename);
+//    sceneManager->getScene()->addCamera(camera);
+//}
 
 
 void MoveCamera::execute() {
@@ -76,3 +77,12 @@ void SetCamera::execute() {
 //    *(this->count) = SceneManagerCreator().getManager()->getScene()->getCamerasCount();
 //}
 //
+void GetLocation::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    auto it = sceneManager->getScene()->camBegin();
+
+    std::advance(it, this->camId);
+
+    (*it)->getPos(*this->x, *this->y,*this->z);
+}
+

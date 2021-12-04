@@ -6,7 +6,7 @@
 #define __CG_COURSEWORK_CAMERA_COMMANDS_HPP__
 
 #include <string>
-
+#include <memory>
 #include "commands/command.hpp"
 
 class CameraCommand : public Command {};
@@ -27,15 +27,15 @@ private:
 };
 
 
-class LoadCamera : public CameraCommand {
-public:
-    explicit LoadCamera(const std::string &filename);
-
-    void execute() override;
-
-private:
-    std::string filename;
-};
+//class LoadCamera : public CameraCommand {
+//public:
+//    explicit LoadCamera(std::string filename);
+//
+//    void execute() override;
+//
+//private:
+//    std::string filename;
+//};
 
 class MoveCamera : public CameraCommand {
 public:
@@ -80,6 +80,25 @@ public:
 
 private:
     size_t cameraId;
+};
+
+
+class GetLocation : public CameraCommand {
+public:
+    GetLocation() = delete;
+
+    GetLocation(std::size_t camId, std::shared_ptr<float>& x, std::shared_ptr<float>& y, std::shared_ptr<float>& z) :
+            x(x), y(y), z(z), camId(camId) {}
+
+    ~GetLocation() override = default;
+
+    void execute() override;
+
+private:
+    std::size_t camId;
+    std::shared_ptr<float> &x;
+    std::shared_ptr<float> &y;
+    std::shared_ptr<float> &z;
 };
 
 //class CountCameras : public CameraCommand {
