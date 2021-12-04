@@ -336,72 +336,114 @@ float3 getReflectionVector(const float3 I, const float3 N) {
     return I - N * 2.f * dot(I, N);
 }
 
-float3 getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, const Ray *ray, int depth) {
-	// float sphereDist = MAXFLOAT;
-
-    // if (depth > 1)
-        // printf("depth = %d\n", depth);
-
-    float3 hit, N;
-    Material material;
-    Ray tmp_ray;
-
-
-	if (!sceneIsIntersect(fList, flLen, ray, &hit, &N, &material))
-    {
-        // if (depth == 4)
-            // printf("return...\n\n");
-		return (float3)(0.2, 0.7, 0.8); // BG color
-    }
-    // FOR MIRROR
-    // float3 reflectDir = normalize(getReflectionVector(ray->dir, N));
-    // float3 reflectSrc = dot(reflectDir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
-
-    // tmp_ray.src = reflectSrc;
-    // tmp_ray.dir = reflectDir;
-
-    // float3 reflect_color = getColor(fList, flLen, lList, llLen, &tmp_ray, depth + 1);
-
-    float diffuseLightIntensity = 0, specularLightIntensity = 0;
-    global const Light *light = 0;
-    // Lights
-    for (int i = 0; i < llLen; ++i)
-    {
-        light = lList + i;
-
-        float3 lightDir = normalize((light->position - hit));
-        float lightDist = distance2(light->position, hit);
-
-        // checking if the point lies in the shadow of the light
-        float3 shadowSrc = dot(lightDir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
-        float3 shadowHit, shadowN;
-
-        tmp_ray.src = shadowSrc;
-        tmp_ray.dir = lightDir;
-        Material tmpMaterial;
-        if (sceneIsIntersect(fList, flLen, &tmp_ray, &shadowHit, &shadowN, &tmpMaterial) &&
-            distance2(shadowHit, shadowSrc) < lightDist)
-            continue;
-
-        diffuseLightIntensity += light->intensity * max(0.f, dot(lightDir, N));
-
-        float3 reflect_vector = getReflectionVector(-lightDir, N);
-
-        specularLightIntensity +=
-                pown(max(0.f, dot(-reflect_vector, ray->dir)), material.specularExp) *
-                light->intensity;
-    }
-
-    float3 alb = material.albedo;
-
-    return material.diffuseColor * diffuseLightIntensity * alb.s0
-           + (float3)(1., 1., 1.) * specularLightIntensity * alb.s1;
-        //    + reflect_color * alb.s2;
-
-    // printf("INTERSECT\n");
+float3 getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, Ray *ray, int depth) {
+    float3 amount = {0.0, 0.0, 0.0};
+    float product = 1.0;
     
-    // return (float3)(0.4, 0.4, 0.3);
+    while (true) 
+    {
+        float3 hit, N;
+        Material material;
+        Ray tmp_ray;
+
+
+        if (depth > 3 || !sceneIsIntersect(fList, flLen, ray, &hit, &N, &material)) break;
+       
+
+        float DLI = 0, SLI = 0; // diffuse light intensity, specular light intensity
+        global const Light *light = 0;
+
+        // Lights
+        for (int i = 0; i < llLen; ++i)
+        {
+            light = lList + i;
+            float3 lightDir = normalize((light->position - hit));
+            float lightDist = distance2(light->position, hit);
+
+            // checking if the point lies in the shadow of the light
+            float3 shadowSrc = dot(lightDir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
+            float3 shadowHit, shadowN;
+
+            tmp_ray.src = shadowSrc;
+            tmp_ray.dir = lightDir;
+            Material tmpMaterial;
+            if (sceneIsIntersect(fList, flLen, &tmp_ray, &shadowHit, &shadowN, &tmpMaterial) && distance2(shadowHit, shadowSrc) < lightDist)
+                continue;
+
+            DLI += light->intensity * max(0.f, dot(lightDir, N));
+            SLI +=  pown(max(0.f, dot(-getReflectionVector(-lightDir, N), ray->dir)), material.specularExp) * light->intensity;
+        }
+
+        float3 alb = material.albedo;
+
+        amount += product * (material.diffuseColor * DLI * alb.s0 + (float3)(1., 1., 1.) * SLI * alb.s1);
+        product *= alb.s2;
+
+        ray->dir = normalize(getReflectionVector(ray->dir, N));
+        ray->src = dot(ray->dir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
+        
+        depth++;
+    }
+
+    return amount + product*(float3)(0.2, 0.7, 0.8);
 }
+
+
+// float3 RaysHandling::castRay(float3 src, float3 dir, const std::shared_ptr<Scene>& scene, size_t depth) {
+//     auto summary12 = float3{0.0};
+//     float palb2 = 1.;
+
+//     while (true) {
+
+// //        depth--;
+
+//         float3 hit, N;
+//         Material mat;
+
+//         if (depth > 3 || !scene->isIntersect(src, dir, hit, N, mat)) break;
+
+//         float DLI = 0, SLI = 0; // diffuse light intensity, specular light intensity
+//         for (auto& light: scene->_lights) {
+//             float3 light_dir = normalize((light->getPosition() - hit));
+//             float light_distance = linalg::distance2(light->getPosition(), hit);
+
+//             // checking if the point lies in the shadow of the light
+//             float3 shadow_src = dot(light_dir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
+//             float3 shadow_hit, shadow_N;
+//             Material tmp_material;
+//             if (scene->isIntersect(shadow_src, light_dir, shadow_hit, shadow_N, tmp_material) &&
+//                 distance2(shadow_hit, shadow_src) < light_distance)
+//                 continue;
+
+//             DLI += light->getIntensity() * std::max(0.f, dot(light_dir, N));
+
+//             auto reflectVec = RaysHandling::getReflectionVector(-light_dir, N);
+
+//             SLI += powf(std::max(0.f, linalg::dot(-reflectVec, dir)), mat.getSpecularExp()) *
+//                    light->getIntensity();
+//         }
+
+//         auto alb = mat.getAlbedo();
+
+
+//         summary12 += palb2 * (mat.getDiffuse() * DLI * alb[0] + float3(1.) * SLI * alb[1]);
+//         palb2 *= alb[2];
+
+
+
+
+//         // offset the original point to avoid occlusion by the object itself
+//         dir = normalize(RaysHandling::getReflectionVector(dir, N));
+//         src = dot(dir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
+
+//         depth++;
+// //        return mat.getDiffuse() * DLI * alb[0]
+// //               + float3(1.) * SLI * alb[1]
+// //               + alb[2] * RaysHandling::castRay(reflectSrc, reflect_dir, scene, depth + 1);;
+//     }
+
+//     return summary12 + palb2*float3{0.2, 0.7, 0.8}; // background color
+
 
 kernel void Render(global uchar *pixels,
                    global const RawFigure *figList,
