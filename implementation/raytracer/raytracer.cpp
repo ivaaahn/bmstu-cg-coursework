@@ -12,7 +12,7 @@
 #include "../../consts.hpp"
 #include <omp.h>
 #include <QImage>
-#include <objects/model/model.hpp>
+#include <objects/model/trismodel.hpp>
 //#include <boost/compute/system.hpp>
 //#include <boost/compute/image/image2d.hpp>
 //#include <boost/compute/interop/qt.hpp>
@@ -20,10 +20,10 @@
 //#include <boost/compute/utility/source.hpp>
 //namespace compute = boost::compute;
 
-using std::cin, std::cout;
+//using std::cin, std::cout;
 
 void RayTracer::cpuRender(const std::shared_ptr<Scene> &scene, const std::shared_ptr<Camera> &cam, const std::shared_ptr<Drawer> &drawer) {
-//#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
     for (int j = 0; j < HEIGHT; j++)
     {
         for (int i = 0; i < WIDTH; i++)
@@ -56,10 +56,15 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene> &scene, const std::shared
 //    std::cerr <<  verts.x << ' ' << verts.y << ' ' << verts.z << std::endl;
 
     auto *hFigures = new raw_figure[scene->_models.size()];
-    auto *hMaterials = new cl_float8[scene->_models.size()];  // Input Materials List
+    auto *hLights = new raw_light[scene->_lights.size()];
+//    auto *hMaterials = new cl_float8[scene->_models.size()];  // Input Materials List
+
     auto *hCameras = new cl_float4[1]; // Camera
     auto *hDim = new cl_int2[1]; // Dimensions
-    auto *hFigSize = new cl_int[1];  // Figures List Size
+    auto *hFigSize = new cl_int[1];  // Figures List's Size
+    auto *hLightSize = new cl_int[1];  // Lights List's Size
+
+//    std::cout << "h's created" << std::endl;
 
     cl_uchar *hImg = drawer->getImage()->bits();
     int hImgLen = (int)drawer->getImage()->sizeInBytes();
@@ -69,33 +74,65 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene> &scene, const std::shared
     {
 //        hFigures[i] = scene->_models[i]->clFormat();
         hFigures[i] = scene->_models[i]->clFormat();
-        hMaterials[i] = scene->_models[i]->clMaterial();
+//        hMaterials[i] = scene->_models[i]->clMaterial();
     }
+
+//    std::cout << "hFigures filled" << std::endl;
+
+
+#pragma omp parallel for num_threads(8)
+    for (int i = 0; i < int(scene->_lights.size()); ++i)
+    {
+        hLights[i] = scene->_lights[i]->clFormat();
+    }
+
+//    std::cout << "hLights filled" << std::endl;
+
 
     hCameras[0] = cam->clFormat();     // Gathering cameras
     hDim[0] = { WIDTH, HEIGHT };
     hFigSize[0] = int(scene->_models.size());
+    hLightSize[0] = int(scene->_lights.size());
+
+//    std::cout << "sizes filled" << std::endl;
 
 
     cl::Buffer bImg(this->ctx, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, hImgLen * sizeof(cl_uchar));
     cl::Buffer bFigures(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, scene->_models.size() * sizeof(raw_figure), hFigures);
-    cl::Buffer bMaterials(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, scene->_models.size() * sizeof(cl_float8), hMaterials);
+    cl::Buffer bLights(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, scene->_lights.size() * sizeof(raw_light), hLights);
     cl::Buffer bCameras(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, 1 * sizeof(cl_float4), hCameras);
     cl::Buffer bDim(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, 1 * sizeof(cl_int2), hDim);
     cl::Buffer bFigSize(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, 1 * sizeof(cl_int), hFigSize);
+    cl::Buffer bLightSize(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, 1 * sizeof(cl_int), hLightSize);
+
+//    std::cout << "buffers inited" << std::endl;
+
 
     cl::Kernel kernel(this->program, "Render", nullptr);
     kernel.setArg(0, bImg);
     kernel.setArg(1, bFigures);
-    kernel.setArg(2, bMaterials);
+    kernel.setArg(2, bLights);
     kernel.setArg(3, bCameras);
     kernel.setArg(4, bDim);
     kernel.setArg(5, bFigSize);
+    kernel.setArg(6, bLightSize);
+
+//    std::cout << "args set" << std::endl;
 
     cl::CommandQueue queue(this->ctx, this->device);
 
+//    std::cout << "queue inited" << std::endl;
+
+
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(NUM_OF_ELEMENTS));
+
+//    std::cout << "enqueueNDRangeKernel inited" << std::endl;
+
+
     queue.enqueueReadBuffer(bImg, CL_TRUE, 0, hImgLen * sizeof(cl_uchar), hImg);
+
+//    std::cout << "enqueueReadBuffer ok" << std::endl;
+
 }
 
 RayTracer::RayTracer() {
