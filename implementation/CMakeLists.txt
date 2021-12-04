@@ -62,8 +62,8 @@ set(OBJECTS
         objects/model/figure.hpp
         objects/model/sphere.cpp
         objects/model/sphere.hpp
-        objects/model/model.cpp
-        objects/model/model.hpp
+        objects/model/trismodel.cpp
+        objects/model/trismodel.hpp
         )
 
 set(SCENE
