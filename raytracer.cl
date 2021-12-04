@@ -354,13 +354,13 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
 		return (float3)(0.2, 0.7, 0.8); // BG color
     }
     // FOR MIRROR
-    float3 reflectDir = normalize(getReflectionVector(ray->dir, N));
-    float3 reflectSrc = dot(reflectDir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
+    // float3 reflectDir = normalize(getReflectionVector(ray->dir, N));
+    // float3 reflectSrc = dot(reflectDir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
 
     // tmp_ray.src = reflectSrc;
     // tmp_ray.dir = reflectDir;
 
-    float3 reflect_color = getColor(fList, flLen, lList, llLen, &tmp_ray, depth + 1);
+    // float3 reflect_color = getColor(fList, flLen, lList, llLen, &tmp_ray, depth + 1);
 
     float diffuseLightIntensity = 0, specularLightIntensity = 0;
     global const Light *light = 0;
@@ -370,7 +370,7 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
         light = lList + i;
 
         float3 lightDir = normalize((light->position - hit));
-        float lightDist = distance2(light->position, h *-it);
+        float lightDist = distance2(light->position, hit);
 
         // checking if the point lies in the shadow of the light
         float3 shadowSrc = dot(lightDir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
