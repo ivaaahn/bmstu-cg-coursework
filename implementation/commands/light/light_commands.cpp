@@ -7,6 +7,7 @@
 #include "managers/scene/scene_manager.hpp"
 #include "managers/load/load_manager.hpp"
 #include <memory>
+#include <utility>
 #include "math/linalg.hpp"
 
 using linalg::aliases::float3;
@@ -14,7 +15,8 @@ using linalg::aliases::float3;
 AddLight::AddLight(float xPos, float yPos, float zPos, float intensity) : xPos(xPos), yPos(yPos), zPos(zPos),
                                                                           intensity(intensity) {}
 
-LoadLight::LoadLight(const std::string& filename) : filename(filename) {}
+LoadLight::LoadLight(std::string  filename) : filename(std::move(filename)) {}
+RemoveLight::RemoveLight(std::size_t lightId) : lightId(lightId) {}
 
 
 void AddLight::execute() {
@@ -32,4 +34,12 @@ void LoadLight::execute() {
 
     auto light = loadManager->lightLoad(this->filename);
     sceneManager->getScene()->addLight(light);
+}
+
+void RemoveLight::execute() {
+    auto scene = SceneManagerCreator().getManager()->getScene();
+    auto it = scene->lightsBegin();
+
+    std::advance(it, this->lightId);
+    scene->removeLight(it);
 }

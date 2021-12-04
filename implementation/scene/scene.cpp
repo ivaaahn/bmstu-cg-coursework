@@ -93,11 +93,11 @@ void Scene::removeCamera(const CamIterator& it) {
 }
 
 void Scene::removeModel(const ModelIterator& it) {
-    //TODO
+    this->_models.erase(it);
 }
 
 void Scene::removeLight(const LightIterator& it) {
-//    TODO
+    this->_lights.erase(it);
 }
 
 LightIterator Scene::lightsBegin() {

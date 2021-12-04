@@ -10,7 +10,7 @@
 
 class LightCommand : public Command {};
 
-class AddLight : public LightCommand{
+class AddLight : public LightCommand {
 public:
     AddLight() = delete;
 
@@ -26,7 +26,7 @@ private:
 
 class LoadLight : public LightCommand {
 public:
-    explicit LoadLight (const std::string &filename);
+    explicit LoadLight (std::string filename);
 
     void execute() override;
 
@@ -34,5 +34,14 @@ private:
     std::string filename;
 };
 
+class RemoveLight : public LightCommand {
+public:
+    explicit RemoveLight(std::size_t lightId);
+
+    void execute() override;
+
+private:
+    std::size_t lightId;
+};
 
 #endif //__CG_COURSEWORK_LIGHT_COMMANDS_HPP__
