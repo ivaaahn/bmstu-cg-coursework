@@ -17,17 +17,18 @@ float3 RaysHandling::castRayCPU(const std::shared_ptr<Ray> &ray, const std::shar
     Material material;
 
     if (depth > 3 || !scene->isIntersect(ray, hit, N, material))
+//    if (!scene->isIntersect(ray, hit, N, material))
         return float3{0.2, 0.7, 0.8}; // background color
 
-    float3 reflectDir = normalize(RaysHandling::getReflectionVector(ray->dir, N));
+//    float3 reflectDir = normalize(RaysHandling::getReflectionVector(ray->dir, N));
 
     // offset the original point to avoid occlusion by the object itself
-    float3 reflectSrc = dot(reflectDir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
+//    float3 reflectSrc = dot(reflectDir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
 
-    auto reflect_color = RaysHandling::castRayCPU(std::make_shared<Ray>(reflectSrc, reflectDir), scene, depth + 1);
+//    auto reflect_color = RaysHandling::castRayCPU(std::make_shared<Ray>(reflectSrc, reflectDir), scene, depth + 1);
 
     float diffuseLightIntensity = 0, specularLightIntensity = 0;
-    for (auto& light: scene->_lights)
+    for (const auto &light: scene->_lights)
     {
         float3 lightDir = normalize((light->getPosition() - hit));
         float lightDist = linalg::distance2(light->getPosition(), hit);
@@ -52,8 +53,8 @@ float3 RaysHandling::castRayCPU(const std::shared_ptr<Ray> &ray, const std::shar
     auto alb = material.getAlbedo();
 
     return material.getDiffuseColor() * diffuseLightIntensity * alb[0]
-           + float3(1.) * specularLightIntensity * alb[1]
-           + reflect_color * alb[2];
+           + float3(1.) * specularLightIntensity * alb[1];
+//             + reflect_color * alb[2];
 }
 
 
