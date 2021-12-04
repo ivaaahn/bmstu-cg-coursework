@@ -10,8 +10,15 @@
 
 #include <objects/object.hpp>
 #include "math/linalg.hpp"
+#include <CL/cl.hpp>
 
 using namespace linalg::aliases;
+
+typedef struct __attribute__ ((packed)) _raw_light {
+    cl_float3 position;
+    cl_float intensity;
+} raw_light;
+
 
 class Light {
 public:
@@ -26,6 +33,13 @@ public:
 
     [[nodiscard]] float getIntensity() const {
         return this->_intensity;
+    }
+
+    [[nodiscard]] raw_light clFormat() const {
+        return {
+                cl_float3{_position.x, _position.y, _position.z},
+                cl_float{_intensity}
+        };
     }
 
 private:

@@ -12,15 +12,17 @@
 #include <CL/cl.hpp>
 using namespace linalg::aliases;
 
-#define NN 1000
+#define NP 5000
+#define NF 8000
 
 // TODO add material support
 typedef struct __attribute__ ((packed)) _raw_figure {
-    cl_float3 points[NN];
-    cl_int3 faces[NN];
+    cl_float3 points[NP];
+    cl_int3 faces[NF];
     cl_float3 box_bounds[2];
     cl_int num_of_points;
     cl_int num_of_faces;
+    raw_material material;
 } raw_figure;
 
 
@@ -46,7 +48,7 @@ public:
 
     [[nodiscard]] const float3& getCenter() const { return this->_center; }
 
-    cl_float8 clMaterial() const { return _material.clFormat(); }
+    raw_material clMaterial() const { return _material.clFormat(); }
 };
 
 #endif //__CG_COURSEWORK_FIGURE_HPP__
