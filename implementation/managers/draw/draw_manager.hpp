@@ -10,7 +10,7 @@
 #include "managers/manager.hpp"
 #include "managers/load/load_manager.hpp"
 #include "objects/model/model_details/point/point.hpp"
-#include "objects/model/model.hpp"
+#include "objects/model/trismodel.hpp"
 #include "objects/camera/camera.hpp"
 #include "scene/scene.hpp"
 //#include "visitor/visitor.hpp"

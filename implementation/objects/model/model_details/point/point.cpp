@@ -72,7 +72,7 @@ Point Point::operator+(const Point &other) {
 }
 
 Point Point::operator-() const {
-    return Point(-this->x, -this->y, -this->z);
+    return {-this->x, -this->y, -this->z};
 }
 
 Point Point::operator-(const Point &other) {

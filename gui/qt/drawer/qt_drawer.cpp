@@ -5,9 +5,12 @@
 #include <QPainter>
 #include <iostream>
 #include "qt_drawer.hpp"
+#include "../../../consts.hpp"
+
+
 
 QtDrawer::QtDrawer(std::shared_ptr<QGraphicsScene>& scene) : scene(scene) {
-    this->image = std::make_shared<QImage>(1081, 900, QImage::Format_RGB32);
+    this->image = std::make_shared<QImage>(WIDTH, HEIGHT, QImage::Format_RGB32);
     this->painter = std::make_shared<QPainter>(this->image.get());
     this->updateScene();
 //    this->image.fill(Qt::white);

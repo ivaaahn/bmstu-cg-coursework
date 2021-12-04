@@ -7,7 +7,7 @@
 #include <memory>
 #include <objects/model/sphere.hpp>
 #include <objects/light/light.hpp>
-#include <objects/model/model.hpp>
+#include <objects/model/trismodel.hpp>
 #include "loaders.hpp"
 
 //void FileLoader::loadPointsCount(size_t &count) {

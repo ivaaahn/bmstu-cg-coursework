@@ -10,7 +10,7 @@
 #include <objects/model/model_details/point/point.hpp>
 #include <objects/model/model_details/edge/edge.hpp>
 #include <memory>
-#include <objects/model/model.hpp>
+#include <objects/model/trismodel.hpp>
 
 class ModelBuilder {
 public:
