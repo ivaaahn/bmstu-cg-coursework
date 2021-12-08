@@ -7,15 +7,14 @@
 #include <exceptions/load_exceptions.hpp>
 
 
-bool Sphere::rayIntersect(const std::shared_ptr<Ray> &ray, float& distTo1stIntersect, float3& N, float3& hit) const {
+bool Sphere::rayIntersect(const std::shared_ptr<Ray>& ray, float& distTo1stIntersect, float3& N, float3& hit) const {
     float3 L = this->_center - ray->src;
 
 
     float dFromSrcToProjOfCenter = dot(L, ray->dir);
     float distToRaySqr = linalg::length2(L) - dFromSrcToProjOfCenter * dFromSrcToProjOfCenter;
 
-    if (distToRaySqr > this->_radius * this->_radius)
-    {
+    if (distToRaySqr > this->_radius * this->_radius) {
         return false;
     }
 
@@ -27,8 +26,7 @@ bool Sphere::rayIntersect(const std::shared_ptr<Ray> &ray, float& distTo1stInter
 // Он заведомо больше чем первый
     if (distTo2ndIntersect < 0) return false;
 
-    if (distTo1stIntersect < 0)
-    {
+    if (distTo1stIntersect < 0) {
         distTo1stIntersect = distTo2ndIntersect;
     }
 
@@ -65,3 +63,18 @@ void Sphere::_loadCenter(const std::shared_ptr<std::ifstream>& srcFile) {
 void Sphere::transform(const float3& move, const float3& scale, const float3& rotate) {
 //TODO
 }
+
+raw_figure Sphere::clFormat() const {
+    return {
+            {},
+            {},
+            {},
+            0,
+            0,
+            this->clMaterial(),
+            cl_float3{_center.x, _center.y, _center.z},
+            cl_float{_radius},
+            FigureType::SPHERE,
+    };
+}
+

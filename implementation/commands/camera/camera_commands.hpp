@@ -7,7 +7,11 @@
 
 #include <string>
 #include <memory>
+
 #include "commands/command.hpp"
+
+#include "math/linalg.hpp"
+using namespace linalg::aliases;
 
 class CameraCommand : public Command {};
 
@@ -16,14 +20,14 @@ class AddCamera : public CameraCommand {
 public:
     AddCamera() = delete;
 
-    AddCamera(float xPos, float yPos, float zPos);
+    AddCamera(const float3 &cords);
 
     ~AddCamera() override = default;
 
     void execute() override;
 
 private:
-    float xPos, yPos, zPos;
+    float3 cords;
 };
 
 
@@ -41,7 +45,7 @@ class MoveCamera : public CameraCommand {
 public:
     MoveCamera() = delete;
 
-    MoveCamera(size_t cameraId, float shiftX, float shiftY, float shiftZ);
+    MoveCamera(size_t cameraId, const float3 &cords);
 
     ~MoveCamera() override = default;
 
@@ -49,7 +53,7 @@ public:
 
 private:
     size_t cameraId;
-    float shiftX, shiftY, shiftZ;
+    float3 cords;
 };
 
 
@@ -87,8 +91,7 @@ class GetLocation : public CameraCommand {
 public:
     GetLocation() = delete;
 
-    GetLocation(std::size_t camId, std::shared_ptr<float>& x, std::shared_ptr<float>& y, std::shared_ptr<float>& z) :
-            x(x), y(y), z(z), camId(camId) {}
+    GetLocation(std::size_t camId, std::shared_ptr<float3>& cords) : camId(camId), cords(cords) {}
 
     ~GetLocation() override = default;
 
@@ -96,9 +99,7 @@ public:
 
 private:
     std::size_t camId;
-    std::shared_ptr<float> &x;
-    std::shared_ptr<float> &y;
-    std::shared_ptr<float> &z;
+    std::shared_ptr<float3> &cords;
 };
 
 //class CountCameras : public CameraCommand {

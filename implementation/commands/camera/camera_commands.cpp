@@ -12,24 +12,21 @@
 
 using linalg::aliases::float3;
 
-AddCamera::AddCamera(float xPos, float yPos, float zPos) : xPos(xPos), yPos(yPos), zPos(zPos) {}
+AddCamera::AddCamera(const float3& cords) : cords(cords) {}
 
 //LoadCamera::LoadCamera(std::string filename) : filename(std::move(filename)) {}
 
-MoveCamera::MoveCamera(size_t cameraId, float shiftX, float shiftY, float shiftZ = 0)
-        : cameraId(cameraId), shiftX(shiftX), shiftY(shiftY), shiftZ(shiftZ) {}
+MoveCamera::MoveCamera(size_t cameraId, const float3& cords) : cameraId(cameraId), cords(cords) {}
 
 RemoveCamera::RemoveCamera(size_t cameraId) : cameraId(cameraId) {}
 
 SetCamera::SetCamera(size_t newCameraId) : cameraId(newCameraId) {}
 
 void AddCamera::execute() {
-    auto camera = std::make_shared<Camera>(float3{xPos, yPos, zPos});
-
     auto sceneManager = SceneManagerCreator().getManager();
     auto scene = sceneManager->getScene();
 
-    scene->addCamera(camera);
+    scene->addCamera(std::make_shared<Camera>(this->cords));
     sceneManager->setCurrentCamera(scene->camEnd() - 1);
 }
 
@@ -48,7 +45,7 @@ void MoveCamera::execute() {
     auto it = sceneManager->getScene()->camBegin();
     std::advance(it, this->cameraId);
 
-    (*it)->shift(float3{this->shiftX, this->shiftY, this->shiftZ});
+    (*it)->shift(this->cords);
 }
 
 
@@ -83,6 +80,6 @@ void GetLocation::execute() {
 
     std::advance(it, this->camId);
 
-    (*it)->getPos(*this->x, *this->y,*this->z);
+    *this->cords = (*it)->getPos();
 }
 

@@ -29,8 +29,6 @@ public:
 
     [[nodiscard]] const float3& getPos() const;
 
-    void getPos(float& x, float& y, float& z);
-
     [[nodiscard]] std::shared_ptr<Ray> getRay(int w, int h) const;
 
     [[nodiscard]] cl_float4 clFormat() const {

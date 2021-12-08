@@ -1,6 +1,7 @@
 #include <QFileDialog>
 #include <exceptions/base_exception.hpp>
 #include <iostream>
+#include <QInputDialog>
 #include "commands/model/model_commands.hpp"
 #include "commands/scene/scene_commands.hpp"
 #include "commands/camera/camera_commands.hpp"
@@ -10,10 +11,18 @@
 #include "drawer/factory/qt_drawer_factory.hpp"
 #include "../../consts.hpp"
 
-#define CAM_SHIFT 2
+#define CAM_SHIFT 1
 
 #define NONE_TXT "None"
 
+
+float3 MainWindow::_readCoords() {
+    return {
+            (float)ui->x_box->value(),
+            (float)ui->y_box->value(),
+            (float)ui->z_box->value()
+    };
+}
 
 void MainWindow::setupScene() {
     this->scene = std::make_shared<QGraphicsScene>(this);
@@ -32,9 +41,8 @@ void MainWindow::setupScene() {
 }
 
 void MainWindow::updateScene() {
-    auto render_scene_cmd = std::make_shared<RenderScene>(this->drawer);
     try {
-        this->facade->execute(render_scene_cmd);
+        this->facade->execute(std::make_shared<RenderScene>(this->drawer));
         this->drawer->updateScene();
     } catch (BaseException& ex) {
         QMessageBox::warning(this, "Error", QString(ex.what()));
@@ -58,15 +66,10 @@ void MainWindow::updateScene() {
 //}
 
 void MainWindow::on_move_btn_clicked() {
-    if (!this->checkCamAndModel()) return;
-
-    auto move_model_cmd = std::make_shared<MoveModel>(
-            getCurrModelId(),
-            ui->x_box->value(), ui->y_box->value(), ui->z_box->value()
-    );
+    if (!this->checkModel()) return;
 
     try {
-        this->facade->execute(move_model_cmd);
+        this->facade->execute(std::make_shared<MoveModel>(currModId(), this->_readCoords()));
         this->updateScene();
     } catch (const BaseException& ex) {
         QMessageBox::warning(this, "Error", QString(ex.what()));
@@ -74,15 +77,22 @@ void MainWindow::on_move_btn_clicked() {
 }
 
 void MainWindow::on_scale_btn_clicked() {
-    if (!this->checkCamAndModel()) return;
+    if (!this->checkModel()) return;
 
-    auto scale_model_cmd = std::make_shared<ScaleModel>(
-            getCurrModelId(),
-            ui->x_box->value(), ui->y_box->value(), ui->z_box->value()
-    );
+    auto cords = this->_readCoords();
+
+    if (cords.x * cords.y * cords.z == 0.) {
+        QMessageBox msgBox;
+        msgBox.setText("Один из коэффициентов равен нулю");
+        msgBox.setInformativeText("Продолжить?");
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msgBox.setDefaultButton(QMessageBox::No);
+        auto ret = msgBox.exec();
+        if (ret == QMessageBox::No) return;
+    }
 
     try {
-        this->facade->execute(scale_model_cmd);
+        this->facade->execute(std::make_shared<ScaleModel>(this->currModId(), cords));
         this->updateScene();
     } catch (const BaseException& ex) {
         QMessageBox::warning(this, "Error", QString(ex.what()));
@@ -90,43 +100,50 @@ void MainWindow::on_scale_btn_clicked() {
 }
 
 void MainWindow::on_rotate_btn_clicked() {
-    if (!this->checkCamAndModel()) return;
-
-    auto rotate_model_cmd = std::make_shared<RotateModel>(
-            getCurrModelId(),
-            ui->x_box->value(), ui->y_box->value(), ui->z_box->value()
-    );
+    if (!this->checkModel()) return;
 
     try {
-        this->facade->execute(rotate_model_cmd);
+        this->facade->execute(std::make_shared<RotateModel>(this->currModId(), this->_readCoords()));
         this->updateScene();
     } catch (BaseException& ex) {
         QMessageBox::warning(this, "Error", QString(ex.what()));
     }
 }
 
+
 void MainWindow::on_load_model_btn_clicked() {
     if (!this->cameraSelected()) {
         QMessageBox::critical(nullptr, "Ошибка", "Сначала выберите камеру");
         return;
     }
+
+    QStringList items;
+    items << tr("Полигональная") << tr("Сфера");
+
+    bool ok;
+    QString item = QInputDialog::getItem(this, tr("Выбор типа"),
+                                         tr("Модель:"), items, 0, false, &ok);
+    if (!ok || item.isEmpty())
+        return;
+
+    auto mod_list = ui->models_list;
     auto filename = QFileDialog::getOpenFileName();
     if (filename.isNull()) return;
 
-//    auto load_model_cmd = std::make_shared<LoadSphere>(filename.toUtf8().data());
-    auto load_model_cmd = std::make_shared<LoadTriangularModel>(filename.toUtf8().data());
-
     try {
-        this->facade->execute(load_model_cmd);
+        if (items.indexOf(item) == FigureType::POLYGONAL)
+            this->facade->execute(std::make_shared<LoadTriangularModel>(filename.toUtf8().data()));
+        else
+            this->facade->execute(std::make_shared<LoadSphere>(filename.toUtf8().data()));
+
         this->updateScene();
-        ui->models_list->addItem(QString("Model#") + QString::number(++this->last_mod_id));
+        mod_list->addItem(QString("Model#") + QString::number(++this->last_mod_id) + " : " + filename.section('/', -1).section('.', 0, 0));
     }
     catch (const BaseException& ex) {
         QMessageBox::warning(this, "Error", QString(ex.what()));
         return;
     }
 
-    auto mod_list = ui->models_list;
     ui->curr_model_lbl->setText(mod_list->item(mod_list->count() - 1)->text());
 }
 
@@ -138,10 +155,9 @@ void MainWindow::on_load_light_btn_clicked() {
 
     auto filename = QFileDialog::getOpenFileName();
     if (filename.isNull()) return;
-    auto load_light_cmd = std::make_shared<LoadLight>(filename.toUtf8().data());
 
     try {
-        this->facade->execute(load_light_cmd);
+        this->facade->execute(std::make_shared<LoadLight>(filename.toUtf8().data()));
         this->updateScene();
         ui->lights_list->addItem(QString("Light#") + QString::number(++this->last_light_id));
     }
@@ -182,16 +198,10 @@ void MainWindow::on_load_light_btn_clicked() {
 //}
 
 void MainWindow::on_add_light_btn_clicked() {
-    auto add_light_cmd = std::make_shared<AddLight>(
-            ui->x_box->value(), ui->y_box->value(), ui->z_box->value(), ui->intensity_box->value()
-    );
-
-    auto lights_list = ui->lights_list;
-
     try {
-        this->facade->execute(add_light_cmd);
+        this->facade->execute(std::make_shared<AddLight>(this->_readCoords(), ui->intensity_box->value()));
         this->updateScene();
-        lights_list->addItem(QString("Light#") + QString::number(++this->last_light_id));
+        ui->lights_list->addItem(QString("Light#") + QString::number(++this->last_light_id));
     }
     catch (BaseException& ex) {
         QMessageBox::warning(this, "Error", QString(ex.what()));
@@ -200,12 +210,8 @@ void MainWindow::on_add_light_btn_clicked() {
 }
 
 void MainWindow::on_add_camera_btn_clicked() {
-    auto add_camera_cmd = std::make_shared<AddCamera>(
-            0., 0., -1.
-    );
-
     try {
-        this->facade->execute(add_camera_cmd);
+        this->facade->execute(std::make_shared<AddCamera>(float3{0., 0., -1.}));
         ui->cams_list->addItem(QString("Camera#") + QString::number(++this->last_cam_id));
     }
     catch (BaseException& ex) {
@@ -222,19 +228,19 @@ void MainWindow::on_add_camera_btn_clicked() {
 
 void MainWindow::updateLocation() {
     std::cout << "updating location ..." << std::endl;
-    auto x = std::make_shared<float>();
-    auto y = std::make_shared<float>();
-    auto z = std::make_shared<float>();
+    auto cords = std::make_shared<float3>();
 
-    std::cout<< "Current camId: " << getCurrCameraID() << std::endl;
+    std::cout << "Current camId: " << getCurrCameraId() << std::endl;
 
-    auto get_loc_cmd = std::make_shared<GetLocation>(getCurrCameraID(), x, y, z);
+    auto get_loc_cmd = std::make_shared<GetLocation>(getCurrCameraId(), cords);
     this->facade->execute(get_loc_cmd);
 
-    std::cout<< "x, y, z: " << *x << ' ' << *y << ' ' << *z << std::endl;
+    std::cout << "x, y, z: " << cords->x << ' ' << cords->y << ' ' << cords->z << std::endl;
 
 
-    ui->curr_loc_lbl->setText("("+QString::number(*x)+", "+QString::number(*y)+", "+QString::number(*z)+")");
+    ui->curr_loc_lbl->setText(
+            "(" + QString::number(cords->x) + ", " + QString::number(cords->y) + ", " + QString::number(cords->z) +
+            ")");
 
     std::cout << "end updating location ..." << std::endl;
 }
@@ -386,7 +392,7 @@ void MainWindow::on_rm_light_btn_clicked() {
 void MainWindow::on_zoom_in_btn_clicked() {
     if (!this->checkCam()) return;
 
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), 0, 0, -CAM_SHIFT);
+    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraId(), float3{0, 0, -CAM_SHIFT});
     try {
         this->facade->execute(camera_move_cmd);
         this->updateScene();
@@ -400,7 +406,7 @@ void MainWindow::on_zoom_in_btn_clicked() {
 void MainWindow::on_zoom_out_btn_clicked() {
     if (!this->checkCam()) return;
 
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), 0, 0, CAM_SHIFT);
+    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraId(), float3{0, 0, CAM_SHIFT});
     try {
         this->facade->execute(camera_move_cmd);
         this->updateScene();
@@ -414,7 +420,7 @@ void MainWindow::on_zoom_out_btn_clicked() {
 void MainWindow::on_right_btn_clicked() {
     if (!this->checkCam()) return;
 
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), CAM_SHIFT, 0, 0);
+    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraId(), float3{CAM_SHIFT, 0, 0});
     try {
         this->facade->execute(camera_move_cmd);
         this->updateScene();
@@ -428,7 +434,7 @@ void MainWindow::on_right_btn_clicked() {
 void MainWindow::on_left_btn_clicked() {
     if (!this->checkCam()) return;
 
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), -CAM_SHIFT, 0, 0);
+    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraId(), float3{-CAM_SHIFT, 0, 0});
     try {
         this->facade->execute(camera_move_cmd);
         this->updateScene();
@@ -441,7 +447,7 @@ void MainWindow::on_left_btn_clicked() {
 void MainWindow::on_up_btn_clicked() {
     if (!this->checkCam()) return;
 
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), 0, CAM_SHIFT, 0);
+    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraId(), float3{0, CAM_SHIFT, 0});
     try {
         this->facade->execute(camera_move_cmd);
         this->updateScene();
@@ -455,7 +461,7 @@ void MainWindow::on_up_btn_clicked() {
 void MainWindow::on_down_btn_clicked() {
     if (!this->checkCam()) return;
 
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraID(), 0, -CAM_SHIFT, 0);
+    auto camera_move_cmd = std::make_shared<MoveCamera>(this->getCurrCameraId(), float3{0, -CAM_SHIFT, 0});
     try {
         this->facade->execute(camera_move_cmd);
         this->updateScene();
@@ -465,7 +471,6 @@ void MainWindow::on_down_btn_clicked() {
     this->updateLocation();
 
 }
-
 
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
@@ -479,8 +484,6 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
     std::cout << r_content.width() << "; " << r_content.height() << std::endl;
 
     this->scene->setSceneRect(0, 0, r_content.width(), r_content.height());
-//    this->updateWithImag
-//    this->drawer->updateWithImage();
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -490,9 +493,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     this->facade = std::make_shared<Facade>(Facade());
 }
 
-bool MainWindow::checkCamAndModel() {
-    if (!this->cameraSelected() || !this->modelSelected()) {
-        QMessageBox::critical(nullptr, "Ошибка", "Сначала выберите камеру и модель");
+bool MainWindow::checkModel() {
+    if (!this->modelSelected()) {
+        QMessageBox::critical(nullptr, "Ошибка", "Сначала выберите модель");
         return false;
     }
 
@@ -520,12 +523,12 @@ bool MainWindow::cameraSelected() { return ui->curr_camera_lbl->text() != QStrin
 
 bool MainWindow::modelSelected() { return ui->curr_model_lbl->text() != QString(NONE_TXT); }
 
-size_t MainWindow::getCurrCameraID() {
+size_t MainWindow::getCurrCameraId() {
     auto item = ui->cams_list->findItems(ui->curr_camera_lbl->text(), Qt::MatchExactly)[0];
     return ui->cams_list->row(item);
 }
 
-size_t MainWindow::getCurrModelId() {
+size_t MainWindow::currModId() {
     auto item = ui->models_list->findItems(ui->curr_model_lbl->text(), Qt::MatchExactly)[0];
     return ui->models_list->row(item);
 }

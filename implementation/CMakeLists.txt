@@ -12,7 +12,8 @@ set(COMMANDS
         commands/model/model_commands.hpp
         commands/scene/scene_commands.cpp
         commands/scene/scene_commands.hpp
-        commands/light/light_commands.cpp commands/light/light_commands.hpp
+        commands/light/light_commands.cpp
+        commands/light/light_commands.hpp
         )
 
 set(DRAWER

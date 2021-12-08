@@ -12,34 +12,39 @@
 using namespace linalg::aliases;
 
 typedef struct __attribute__ ((packed)) _raw_material {
-    cl_float3 albedo;
+    cl_float4 albedo;
     cl_float3 diffuseColor;
     cl_float specularExp;
+    cl_float refIdx;
 } raw_material;
 
 
 class Material {
 private:
-    float3 _albedo;
+    float4 _albedo;
     float3 _diffuseColor;
     float _specularExp;
+    float _refIdx; // Refractive index
 
     void _readAlbedo(const std::shared_ptr<std::ifstream>& srcFile);
 
     void _readDiffuseColor(const std::shared_ptr<std::ifstream>& srcFile);
 
-    void _readSpecularExp(std::shared_ptr<std::ifstream> srcFile);
+    void _readSpecularExp(const std::shared_ptr<std::ifstream>& srcFile);
+
+    void _readRefIdx(const std::shared_ptr<std::ifstream>& srcFile);
 
 public:
-    Material(const float3& albedo, const float3& color, const float& spec) : _albedo(albedo), _diffuseColor(color),
-                                                                             _specularExp(spec) {}
 
+    Material() = default;
 
-    Material() : _albedo(1, 0, 0), _diffuseColor(), _specularExp() {}
+    Material(float ref_idx, const float4& albedo, const float3& color, float spec) :
+            _refIdx(ref_idx), _albedo(albedo), _diffuseColor(color), _specularExp(spec) {}
+
 
     explicit Material(const std::shared_ptr<std::ifstream>& srcFile);
 
-    const float3& getAlbedo() {
+    const float4& getAlbedo() {
         return this->_albedo;
     }
 
@@ -55,7 +60,7 @@ public:
         return {
                 cl_float3{_albedo.x, _albedo.y, _albedo.z,},
                 cl_float3{_diffuseColor.x, _diffuseColor.y, _diffuseColor.z},
-                cl_float {_specularExp}
+                cl_float{_specularExp}
         };
 
 //    [[nodiscard]] cl_float8 clFormat() const {

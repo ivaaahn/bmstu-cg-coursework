@@ -10,26 +10,22 @@
 
 AddModel::AddModel(std::shared_ptr<Figure> model) : model(std::move(model)) {}
 
-LoadModel::LoadModel(std::string  filename) : filename(std::move(filename)) {}
+LoadModel::LoadModel(std::string filename) : filename(std::move(filename)) {}
 
-LoadTriangularModel::LoadTriangularModel(std::string  filename) : filename(std::move(filename)) {}
+LoadTriangularModel::LoadTriangularModel(std::string filename) : filename(std::move(filename)) {}
 
-MoveModel::MoveModel(size_t modelId, const float dx, const float dy, const float dz)
-        : modelId(modelId), dx(dx), dy(dy), dz(dz) {}
+MoveModel::MoveModel(size_t modelId, const float3& cords) : modelId(modelId), cords(cords) {}
 
 RemoveModel::RemoveModel(size_t modelId) : modelId(modelId) {}
 
-RotateModel::RotateModel(size_t modelId, const float ax, const float ay, const float az)
-        : modelId(modelId), ax(ax), ay(ay), az(az) {}
+RotateModel::RotateModel(size_t modelId, const float3& cords) : modelId(modelId), cords(cords) {}
 
-
-ScaleModel::ScaleModel(size_t modelId, const float kx, const float ky, const float kz)
-        : modelId(modelId), kx(kx), ky(ky), kz(kz) {}
+ScaleModel::ScaleModel(size_t modelId, const float3& cords) : modelId(modelId), cords(cords) {}
 
 TransformModel::TransformModel(size_t modelId, const float3& move, const float3& scale, const float3& rotate)
         : modelId(modelId), move(move), scale(scale), rotate(rotate) {}
 
-LoadSphere::LoadSphere(std::string  filename) : filename(std::move(filename)) {}
+LoadSphere::LoadSphere(std::string filename) : filename(std::move(filename)) {}
 
 
 //CountModels::CountModels(std::shared_ptr<size_t> &count) : count(count) {}
@@ -75,26 +71,16 @@ void RemoveModel::execute() {
 }
 
 void MoveModel::execute() {
-    float3 move{this->dx, this->dy, this->dz};
-    float3 scale{1};
-    float3 rotate{};
-    TransformModel(this->modelId, move, scale, rotate).execute();
+    TransformModel(this->modelId, this->cords, float3{1.}, float3{0.}).execute();
 }
 
 
 void RotateModel::execute() {
-    float3 move{};
-    float3 scale{1};
-    float3 rotate{this->ax, this->ay, this->az};
-    TransformModel(this->modelId, move, scale, rotate).execute();
+    TransformModel(this->modelId, float3{0.}, float3{1.}, this->cords).execute();
 }
 
-
 void ScaleModel::execute() {
-    float3 move(0, 0, 0);
-    float3 scale(this->kx, this->ky, this->kz);
-    float3 rotate(0, 0, 0);
-    TransformModel(this->modelId, move, scale, rotate).execute();
+    TransformModel(this->modelId, float3{0.}, this->cords, float3{1.}).execute();
 }
 
 

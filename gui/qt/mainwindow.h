@@ -47,11 +47,11 @@ protected:
 
     void resetCamera();
 
-    size_t getCurrCameraID();
+    size_t getCurrCameraId();
 
-    size_t getCurrModelId();
+    size_t currModId();
 
-    bool checkCamAndModel();
+    bool checkModel();
     bool checkCam();
 
     void updateLocation();
@@ -97,6 +97,8 @@ private:
 
     std::shared_ptr<QGraphicsScene> scene;
     std::shared_ptr<Drawer> drawer;
+
+    float3 _readCoords();
 
     size_t last_cam_id = 0;
     size_t last_mod_id = 0;

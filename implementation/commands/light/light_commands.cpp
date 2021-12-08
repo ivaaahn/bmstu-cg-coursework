@@ -7,33 +7,18 @@
 #include "managers/scene/scene_manager.hpp"
 #include "managers/load/load_manager.hpp"
 #include <memory>
-#include <utility>
-#include "math/linalg.hpp"
-
-using linalg::aliases::float3;
-
-AddLight::AddLight(float xPos, float yPos, float zPos, float intensity) : xPos(xPos), yPos(yPos), zPos(zPos),
-                                                                          intensity(intensity) {}
-
-LoadLight::LoadLight(std::string  filename) : filename(std::move(filename)) {}
-RemoveLight::RemoveLight(std::size_t lightId) : lightId(lightId) {}
 
 
 void AddLight::execute() {
-    auto light = std::make_shared<Light>(float3{xPos, yPos, zPos}, intensity);
-
     auto sceneManager = SceneManagerCreator().getManager();
     auto scene = sceneManager->getScene();
-
-    scene->addLight(light);
+    scene->addLight(std::make_shared<Light>(this->cords, this->intensity));
 }
 
 void LoadLight::execute() {
     auto loadManager = LoadManagerCreator().getManager();
     auto sceneManager = SceneManagerCreator().getManager();
-
-    auto light = loadManager->lightLoad(this->filename);
-    sceneManager->getScene()->addLight(light);
+    sceneManager->getScene()->addLight(loadManager->lightLoad(this->filename));
 }
 
 void RemoveLight::execute() {

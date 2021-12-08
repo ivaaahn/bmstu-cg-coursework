@@ -1,5 +1,8 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
+#define POLYGONAL 0
+#define SPHERE 1
+
 // Define C++ Classes as OpenCL structs
 typedef struct __attribute__ ((packed)) _cl_tag_Sphere {
     float3 center;
@@ -27,9 +30,10 @@ typedef struct __attribute__ ((packed)) _cl_tag_Camera {
 
 
 typedef struct __attribute__ ((packed)) _cl_tag_Material {
-    float3 albedo;
-	float3 diffuseColor;
+    float4 albedo;
+	float3 diffuse;
 	float specularExp;
+	float refIdx;
 } Material;
 
 #define NP 5000
@@ -42,11 +46,14 @@ typedef struct __attribute__ ((packed)) _cl_tag_RawFigure {
     int num_of_points;
     int num_of_faces;
     Material material;
+    float3 center;
+    float radius;
+    int fig_type;
 } RawFigure;
 
 
 
-// float3 getReflectionVector(float3 I, float3 N) {
+// float3 reflect(float3 I, float3 N) {
 //     return I - N * 2 * dot(I, N);
 // }
 
@@ -110,6 +117,23 @@ typedef struct __attribute__ ((packed)) _cl_tag_RawFigure {
 // 	return (Ray) { (double3)(vOrigin + vOffset), (double3)(vLowerLeftCorner + (s * vHorizontal) + (t * vVertical) - vOrigin - vOffset) };
 // }
 
+float3 refract(const float3 I, float3 N, float eta_t, float eta_i) { // Snell's law
+    float cosi = -max(-1.f, min(1.f, dot(I, N)));
+
+
+    if (cosi < 0)
+    { // if the ray is inside the object, swap the indices and invert the normal to get the correct result
+        N = -N;
+        float tmp = eta_i;
+        eta_i = eta_t;
+        eta_t = tmp;
+        cosi = -max(-1.f, min(1.f, dot(I, N))); // TODO: может оптимизировать можно ? 
+    }
+
+    float eta = eta_i / eta_t;
+    float k = 1 - eta*eta*(1 - cosi*cosi);
+    return k < 0 ? (float3)(1.f, 0.f, 0.f) : I*eta + N*(eta*cosi - sqrt(k));
+}
 
 void getRay(Ray *ray, int w, int h, int2 dim, Camera *cam) {
     float x = w + 0.5 - dim.s0 / 2.;
@@ -138,36 +162,40 @@ float length2(float3 v) {
 	return dot(v, v);
 }
 
-float distance2(float3 a, float3 b) {
+float dist2(float3 a, float3 b) {
 	return length2(b-a);
 }
 
-bool sphereIsIntersect(const Sphere *sphere, const Ray *ray, float *distTo1stIntersect) {
-	float3 L = sphere->center - ray->src;
+bool sphereIsIntersect(global const RawFigure *fig, const Ray *ray, float *distTo1stIntersect, float3 *N, float3 *hit) {
+	float3 L = fig->center - ray->src;
 
 
     float dFromSrcToProjOfCenter = dot(L, ray->dir);
     float distToRaySqr = length2(L) - dFromSrcToProjOfCenter * dFromSrcToProjOfCenter;
 
-    if (distToRaySqr > sphere->radius * sphere->radius)
+    float rad2 = fig->radius * fig->radius;
+
+    if (distToRaySqr > rad2)
     {
         return false;
     }
 
-    float halfChordLength = sqrt(sphere->radius * sphere->radius - distToRaySqr);
+    float halfChordLength = sqrt(rad2 - distToRaySqr);
 
     *distTo1stIntersect = dFromSrcToProjOfCenter - halfChordLength;
     float distTo2ndIntersect = dFromSrcToProjOfCenter + halfChordLength;
+
+    if (distTo2ndIntersect < 0) return false;
+
 
     if (*distTo1stIntersect < 0)
     {
         *distTo1stIntersect = distTo2ndIntersect;
     }
 
-    if (*distTo1stIntersect < 0)
-    {
-        return false;
-    }
+
+    *hit = ray->src + ray->dir * *distTo1stIntersect;
+    *N = normalize(*hit - fig->center);
 
     return true;
 }
@@ -244,7 +272,7 @@ float3 getTriangleNormal(global const RawFigure *fig, const int3 face, const Ray
 
     float3 n = normalize(cross(edge1, edge2));
 
-    if (dot(n, ray->dir) < 0)
+    if (dot(n, ray->dir) > 0)
     {
         n *= -1;
     }
@@ -254,10 +282,7 @@ float3 getTriangleNormal(global const RawFigure *fig, const int3 face, const Ray
 
 
 bool rayTriangleModelIntersect(global const RawFigure *fig, const Ray *ray, float *distTo1stIntersect, float3 *N, float3 *hit) {
-    if (!rayBoxIntersect(fig, ray)) return false;
-
-    // printf("rayTriangleModelIntersect() start...\n");
-    
+    // if (!rayBoxIntersect(fig, ray)) return false;
 
     float faceDist = MAXFLOAT;
     float currDist;
@@ -284,9 +309,8 @@ bool rayTriangleModelIntersect(global const RawFigure *fig, const Ray *ray, floa
 
 
 
-bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray *ray, float3 *hit, float3 *N, Material *mat) {
-    // printf("sceneIsIntersect() start...\n");
 
+bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray *ray, float3 *hit, float3 *N, Material *mat) {
     float figuresDist = MAXFLOAT;
 
     float currDist;
@@ -294,17 +318,23 @@ bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray 
 
     for (int i = 0; i < flLen; ++i)
     {
-        // Sphere sphere = { (float3)(figList[i].s0, figList[i].s1, figList[i].s2), (float)figList[i].s3 };
+        if ((fList[i].fig_type == POLYGONAL) && rayTriangleModelIntersect(&fList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
+        {
+            figuresDist = currDist;
+            *hit = currHit;
+            *N = currN;
+            *mat = fList[i].material;
 
+            continue;
+        }
 
-        if (rayTriangleModelIntersect(&fList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
+        if (sphereIsIntersect(&fList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
         {
             figuresDist = currDist;
             *hit = currHit;
             *N = currN;
             *mat = fList[i].material;
         }
-
     }
 
     float checkerboard_dist = MAXFLOAT;
@@ -318,13 +348,12 @@ bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray 
             checkerboard_dist = d;
             *hit = pt;
             *N = (float3)(0, 1, 0);
-            mat->diffuseColor = ((int)(0.5 * hit->x + 1000) + (int)(0.5 * hit->z)) & 1 ? (float3)(.3, .3, .3) : (float3)(.3, .2, .1);
-            // mat->diffuseColor *= 0.3;
+            mat->diffuse = ((int)(0.5 * hit->x + 1000) + (int)(0.5 * hit->z)) & 1 ? (float3)(.3, .3, .3) : (float3)(.3, .2, .1);
+            // mat->diffuse *= 0.3;
         }
     }
 
     return min(figuresDist, checkerboard_dist) < 1000;
-
 
     // printf("sceneIsIntersect(): [2] figuresDist == %f", figuresDist);
 
@@ -332,62 +361,185 @@ bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray 
 }
 
 
-float3 getReflectionVector(const float3 I, const float3 N) {
+float3 reflect(const float3 I, const float3 N) {
     return I - N * 2.f * dot(I, N);
 }
 
-float3 getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, Ray *ray, int depth) {
-    float3 amount = {0.0, 0.0, 0.0};
-    float product = 1.0;
-    
-    while (true) 
+
+
+
+
+float3 _getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, const Material *m, float3 hit, const Ray *ray, float3 N, float3 reflect_cf, float3 refract_cf) {
+    float DLI = 0, SLI = 0; // diffuse light intensity, specular light intensity
+    global const Light *light = 0;
+
+    for (int i = 0; i < llLen; ++i)
     {
-        float3 hit, N;
-        Material material;
+        light = lList + i;
+        float3 lightDir = normalize((light->position - hit));
+        float lightDist = dist2(light->position, hit);
+
+        // checking if the point lies in the shadow of the light
+        float3 shadowSrc = dot(lightDir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
+        float3 shadowHit, shadowN;
+
         Ray tmp_ray;
+        tmp_ray.src = shadowSrc;
+        tmp_ray.dir = lightDir;
+        Material tmpMaterial;
+        if (sceneIsIntersect(fList, flLen, &tmp_ray, &shadowHit, &shadowN, &tmpMaterial) && dist2(shadowHit, shadowSrc) < lightDist)
+            continue;
 
-
-        if (depth > 3 || !sceneIsIntersect(fList, flLen, ray, &hit, &N, &material)) break;
-       
-
-        float DLI = 0, SLI = 0; // diffuse light intensity, specular light intensity
-        global const Light *light = 0;
-
-        // Lights
-        for (int i = 0; i < llLen; ++i)
-        {
-            light = lList + i;
-            float3 lightDir = normalize((light->position - hit));
-            float lightDist = distance2(light->position, hit);
-
-            // checking if the point lies in the shadow of the light
-            float3 shadowSrc = dot(lightDir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
-            float3 shadowHit, shadowN;
-
-            tmp_ray.src = shadowSrc;
-            tmp_ray.dir = lightDir;
-            Material tmpMaterial;
-            if (sceneIsIntersect(fList, flLen, &tmp_ray, &shadowHit, &shadowN, &tmpMaterial) && distance2(shadowHit, shadowSrc) < lightDist)
-                continue;
-
-            DLI += light->intensity * max(0.f, dot(lightDir, N));
-            SLI +=  pown(max(0.f, dot(-getReflectionVector(-lightDir, N), ray->dir)), material.specularExp) * light->intensity;
-        }
-
-        float3 alb = material.albedo;
-
-        amount += product * (material.diffuseColor * DLI * alb.s0 + (float3)(1., 1., 1.) * SLI * alb.s1);
-        product *= alb.s2;
-
-        ray->dir = normalize(getReflectionVector(ray->dir, N));
-        ray->src = dot(ray->dir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
-        
-        depth++;
+        DLI += light->intensity * max(0.f, dot(lightDir, N));
+        SLI +=  pown(max(0.f, dot(-reflect(-lightDir, N), ray->dir)), m->specularExp) * light->intensity;
     }
 
-    return amount + product*(float3)(0.2, 0.7, 0.8);
+    float4 alb = m->albedo;
+    
+    return m->diffuse*DLI*alb[0] + (float3)(1., 1., 1.)*SLI*alb[1] + reflect_cf*alb[2] + refract_cf*alb[3];
 }
 
+
+
+
+/*
+
+Color get_color(X: Color, Y: Color, hit: HitData);
+
+Ray get_left_ray();
+Ray get_right_ray()
+
+
+Color X;
+Color Y;
+
+class HitData:
+    exitst: bool
+    ray: Ray
+    mat: Material
+    hit: Point
+    norm: Vector
+    left_color: Color
+    depth: char 
+
+depth = 0;
+
+stack = [];
+
+curr_color = BGColor(); // == right_color
+
+while(true):
+    while curr.exist:
+        new_depth = stack ? stack.peek().depth + 1 : 0
+
+        stack.push(curr, new_depth)
+        stack.push(curr, new_depth)
+        curr = getLeft(curr)
+
+        curr.exist = new_depth == 2 ? false : intersect()
+
+    if stack.size() == 0:
+        return curr_color
+
+    curr = stack.pop();
+
+
+    if stack.size() > 0 and stack.peek() == curr: // значит поднялись по левой ветке
+        stack.peek().left_info = curr_color;
+        curr_color = BGColor();
+        curr = getRight(curr)
+        curr.exist = intersect()
+
+    else:
+        curr_color = getColor(curr.left_color, curr_color)
+        curr.exist = false;
+
+
+*/
+
+typedef struct _ray_hit_data {
+    char idx;
+    Ray ray;
+    bool hits;
+    float3 hit;
+    float3 N;
+    Material m;
+    float3 reflect_cf;
+    char depth;
+} RayHitData;
+
+#define STACK_LEN 16
+#define STACK_MAX STACK_LEN - 1
+
+#define CONSTRAINT 2
+
+
+
+float3 getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, Ray *ray, int i, int j) {
+    RayHitData stack[STACK_LEN] = {};
+    int top = -1;
+
+    RayHitData d;
+
+    char id = 0;
+
+    d.idx = id++;
+    d.ray = *ray;
+    d.hits = sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
+
+    float3 curr_color = (float3)(0.5, 0.5, 0.5);
+
+    while (true) 
+    {
+        while (d.hits)
+        {
+            d.depth = top < 0 ? 0 : stack[top].depth + 1;
+            // printf("(%d, %d): while... stacktop == %d, id == %d, depth == %d\n", i, j, top, d.idx, d.depth);
+
+            stack[++top] = d;
+            stack[++top] = d;
+
+            // get left child
+            d.ray.dir = normalize(reflect(d.ray.dir, d.N));         
+            d.ray.src = dot(d.ray.dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
+            d.idx = id++;
+
+            // stack.peek().depth на самом деле, но так тоже можно...
+            d.hits = (stack[top].depth >= CONSTRAINT) ? false : sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
+        }
+
+        if (top == -1) break;
+
+        d = stack[top--];
+
+
+        if (top != -1 && stack[top].idx == d.idx)
+        {
+            // printf("(%d, %d): if... stacktop == %d, id == %d, depth == %d\n", i, j, top, d.idx, d.depth);
+
+            stack[top].reflect_cf = curr_color;
+            curr_color = (float3)(0.5, 0.5, 0.5);
+
+            // get right child
+            d.ray.dir = normalize(refract(d.ray.dir, d.N, d.m.refIdx, 1.f));         
+            d.ray.src = dot(d.ray.dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
+            d.idx = id++;
+
+            d.hits = (stack[top].depth >= CONSTRAINT) ? false : sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
+        }
+        else
+        {
+            // printf("(%d, %d): else... stacktop == %d, id == %d, depth == %d\n", i, j, top, d.idx, d.depth);
+            curr_color = _getColor(fList, flLen, lList, llLen, &d.m, d.hit, &d.ray, d.N, d.reflect_cf, curr_color);
+            d.hits = false;
+        }
+    }
+
+    // printf("(%d, %d) end...\n", i, j);
+    return curr_color;
+}
+// float3 _getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, const Material *m, float3 hit, const Ray *ray, float3 N, float3 reflect_cf, float3 refract_cf) {
+// 
 
 // float3 RaysHandling::castRay(float3 src, float3 dir, const std::shared_ptr<Scene>& scene, size_t depth) {
 //     auto summary12 = float3{0.0};
@@ -405,19 +557,19 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
 //         float DLI = 0, SLI = 0; // diffuse light intensity, specular light intensity
 //         for (auto& light: scene->_lights) {
 //             float3 light_dir = normalize((light->getPosition() - hit));
-//             float light_distance = linalg::distance2(light->getPosition(), hit);
+//             float light_distance = linalg::dist2(light->getPosition(), hit);
 
 //             // checking if the point lies in the shadow of the light
 //             float3 shadow_src = dot(light_dir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
 //             float3 shadow_hit, shadow_N;
 //             Material tmp_material;
 //             if (scene->isIntersect(shadow_src, light_dir, shadow_hit, shadow_N, tmp_material) &&
-//                 distance2(shadow_hit, shadow_src) < light_distance)
+//                 dist2(shadow_hit, shadow_src) < light_distance)
 //                 continue;
 
 //             DLI += light->getIntensity() * std::max(0.f, dot(light_dir, N));
 
-//             auto reflectVec = RaysHandling::getReflectionVector(-light_dir, N);
+//             auto reflectVec = RaysHandling::reflect(-light_dir, N);
 
 //             SLI += powf(std::max(0.f, linalg::dot(-reflectVec, dir)), mat.getSpecularExp()) *
 //                    light->getIntensity();
@@ -433,7 +585,7 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
 
 
 //         // offset the original point to avoid occlusion by the object itself
-//         dir = normalize(RaysHandling::getReflectionVector(dir, N));
+//         dir = normalize(RaysHandling::reflect(dir, N));
 //         src = dot(dir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
 
 //         depth++;
@@ -469,6 +621,8 @@ kernel void Render(global uchar *pixels,
 	int j = floor((double)(gid / dim.x)); // Current Y
 	int i = gid - (j * dim.x); // Current X
 
+    // printf("(%d, %d)\n", i, j);
+
 	Camera camera = { (float3)(cam[0].s0, cam[0].s1, cam[0].s2), cam[0].s3 };
 
     Ray ray;
@@ -476,7 +630,7 @@ kernel void Render(global uchar *pixels,
 
     // printf("Material: (%f, %f, %f), (%f, %f, %f), %f\n",
     //  figList[0].material.albedo.x, figList[0].material.albedo.y, figList[0].material.albedo.z,
-    //  figList[0].material.diffuseColor.x, figList[0].material.diffuseColor.y, figList[0].material.diffuseColor.z,
+    //  figList[0].material.diffuse.x, figList[0].material.diffuse.y, figList[0].material.diffuse.z,
     //  figList[0].material.specularExp);
 
     // printf("figList[0].faces[0].s0 = %d\n", figList[0].faces[0].s0);
@@ -490,7 +644,7 @@ kernel void Render(global uchar *pixels,
 
 	// Sphere sphere = { (float3)(figList[gid].s0, figList[gid].s1, figList[gid].s2), (float)figList[gid].s3 };
 
-    float3 c = getColor(figList, figListLen, lightList, lightListLen, &ray, 0);
+    float3 c = getColor(figList, figListLen, lightList, lightListLen, &ray, i, j);
 
     float max_ = max(c.s0, max(c.s1, c.s2));
     if (max_ > 1) c *= (1.f / max_);

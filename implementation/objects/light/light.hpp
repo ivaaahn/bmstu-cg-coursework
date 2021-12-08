@@ -22,7 +22,7 @@ typedef struct __attribute__ ((packed)) _raw_light {
 
 class Light {
 public:
-    Light(const float3& p, const float& i) : _position(p), _intensity(i) {}
+    Light(const float3& p, float i) : _position(p), _intensity(i) {}
 
     explicit Light(const std::shared_ptr<std::ifstream>& srcFile);
 

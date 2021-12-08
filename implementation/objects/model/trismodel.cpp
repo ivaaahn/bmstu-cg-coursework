@@ -95,7 +95,7 @@ bool TriangularModel::rayIntersect(const std::shared_ptr<Ray>& ray, float& distT
 
     if (faceDist == std::numeric_limits<float>::max()) return false;
 
-    N = this->getNormal(face, ray);
+    N = this->getN(face, ray);
     distTo1stIntersect = currDist;
     hit = ray->src + ray->dir * currDist;
 
@@ -136,7 +136,7 @@ TriangularModel::_rayFaceIntersect(const std::shared_ptr<Ray>& ray, const Triang
     return ray_tvalue > EPS;
 }
 
-float3 TriangularModel::getNormal(const Triangle& face, const std::shared_ptr<Ray>& ray) const {
+float3 TriangularModel::getN(const Triangle& face, const std::shared_ptr<Ray>& ray) const {
     float3 edge1 = getPoint(face.verts[1]) - getPoint(face.verts[0]);
     float3 edge2 = getPoint(face.verts[2]) - getPoint(face.verts[0]);
 
@@ -267,6 +267,10 @@ raw_figure TriangularModel::clFormat() const {
 
     res.material = this->clMaterial();
 
+    res.center = cl_float3{}; // TODO  а нужен ли центр ?
+    res.radius = cl_float{};
+    res.fig_type = FigureType::POLYGONAL;
+
     return res;
 }
 
@@ -274,52 +278,63 @@ inline double toRad(const float angle) {
     return angle * (M_PI / 180);
 }
 
-void move(float3& p, float dx, float dy, float dz) {
-    p.x += dx;
-    p.y += dy;
-    p.z += dz;
+
+void TriangularModel::_rotX(float3& p, float angle) {
+    auto _cos = (float)cos(toRad(angle));
+    auto _sin = (float)sin(toRad(angle));
+    auto _y = p.y;
+
+    p.y = p.y * _cos - p.z * _sin;
+    p.z = p.z * _cos + _y * _sin;
 }
 
-void rotateX(float3& p, float ax) {
-    auto _cos = (float)cos(toRad(ax));
-    auto _sin = (float)sin(toRad(ax));
-    float _y = p.y;
-
-    p.y = static_cast<float>(p.y * _cos - p.z * _sin);
-    p.z = static_cast<float>(p.z * _cos + _y * _sin);
-}
-
-void rotateY(float3& p, float ay) {
-    auto _cos = (float)cos(toRad(ay));
-    auto _sin = (float)sin(toRad(ay));
-    float _x = p.x;
+void TriangularModel::_rotY(float3& p, float angle) {
+    auto _cos = (float)cos(toRad(angle));
+    auto _sin = (float)sin(toRad(angle));
+    auto _x = p.x;
 
     p.x = p.x * _cos - p.z * _sin;
     p.z = p.z * _cos + _x * _sin;
 }
 
-void rotateZ(float3& p, float az) {
-    const double _cos = cos(toRad(az));
-    const double _sin = sin(toRad(az));
-    const double _x = p.x;
+void TriangularModel::_rotZ(float3& p, float angle) {
+    auto _cos = (float)cos(toRad(angle));
+    auto _sin = (float)sin(toRad(angle));
+    auto _x = p.x;
 
     p.x = p.x * _cos - p.y * _sin;
     p.y = p.y * _cos + _x * _sin;
 }
 
+void TriangularModel::_scale(float3& point, const float3& scale) {
+    point.x *= scale.x;
+    point.y *= scale.y;
+    point.z *= scale.z;
+}
+
+void TriangularModel::_rot(float3& point, const float3& rotate) {
+    this->_rotX(point, rotate.x);
+    this->_rotY(point, rotate.y);
+    this->_rotZ(point, rotate.z);
+}
 
 void TriangularModel::transform(const float3& move, const float3& scale, const float3& rotate) {
-    auto center = this->getBoxCenter();
+    std::cerr << "Move: (" << move.x << ", " << move.y << ", " << move.z << ")" << std::endl;
+    std::cerr << "Scale: (" << scale.x << ", " << scale.y << ", " << scale.z << ")" << std::endl;
+    std::cerr << "Rotate: (" << rotate.x << ", " << rotate.y << ", " << rotate.z << ")" << std::endl;
 
+    auto center = this->getCenter();
     std::cout << "center = (" << center.x << ' ' << center.y << ' ' << center.z << ')' << std::endl;
 
-//#pragma omp parallel for num_threads(8)
-    for (auto& point: this->_points) {
-        point -= center;
-        rotateX(point, rotate.x);
-        rotateY(point, rotate.y);
-        rotateZ(point, rotate.z);
-        point += center;
+#pragma omp parallel for num_threads(8)
+    for (int i = 0; i < this->_points.size(); ++i) {
+        _points[i] -= center;
+
+        this->_rot(_points[i], rotate);
+        this->_scale(_points[i], scale);
+
+        _points[i] += center;
+        _points[i] += move;
     }
 
     auto bbox_pmin_new = float3{1.} * std::numeric_limits<float>::max();
@@ -327,10 +342,12 @@ void TriangularModel::transform(const float3& move, const float3& scale, const f
 
     for (auto& point: this->_corners) {
         point -= center;
-        rotateX(point, rotate.x);
-        rotateY(point, rotate.y);
-        rotateZ(point, rotate.z);
+
+        this->_rot(point, rotate);
+        this->_scale(point, scale);
+
         point += center;
+        point += move;
 
         for (int i = 0; i < 3; ++i) {
             bbox_pmin_new[i] = std::min(bbox_pmin_new[i], point[i]);
@@ -340,8 +357,14 @@ void TriangularModel::transform(const float3& move, const float3& scale, const f
 
     this->_box_bounds[0] = bbox_pmin_new;
     this->_box_bounds[1] = bbox_pmax_new;
+}
 
-//    this->_updCorners();
+float3 TriangularModel::getCenter() const {
+    auto center = float3{0.};
+    for (const auto& p: this->_corners)
+        center += p;
+
+    return center / 8;
 }
 
 

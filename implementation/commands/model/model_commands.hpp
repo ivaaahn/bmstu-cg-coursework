@@ -43,7 +43,7 @@ class LoadModel : public ModelCommand {
 public:
     LoadModel() = delete;
 
-    explicit LoadModel(std::string  filename);
+    explicit LoadModel(std::string filename);
 
     ~LoadModel() override = default;
 
@@ -58,7 +58,7 @@ class LoadSphere : public ModelCommand {
 public:
     LoadSphere() = delete;
 
-    explicit LoadSphere(std::string  filename);
+    explicit LoadSphere(std::string filename);
 
     ~LoadSphere() override = default;
 
@@ -86,7 +86,7 @@ class MoveModel : public ModelCommand {
 public:
     MoveModel() = delete;
 
-    MoveModel(size_t modelId, float dx, float dy, float dz);
+    MoveModel(size_t modelId, const float3& cords);
 
     ~MoveModel() override = default;
 
@@ -94,8 +94,7 @@ public:
 
 private:
     size_t modelId;
-
-    float dx, dy, dz;
+    float3 cords;
 };
 
 class RemoveModel : public ModelCommand {
@@ -116,7 +115,7 @@ class RotateModel : public ModelCommand {
 public:
     RotateModel() = delete;
 
-    RotateModel(std::size_t modelId, float ax, float ay, float az);
+    RotateModel(size_t modelId, const float3& cords);
 
     ~RotateModel() override = default;
 
@@ -124,15 +123,14 @@ public:
 
 private:
     size_t modelId;
-
-    float ax, ay, az;
+    float3 cords;
 };
 
 class ScaleModel : public ModelCommand {
 public:
     ScaleModel() = delete;
 
-    ScaleModel(size_t modelId, float kx, float ky, float kz);
+    ScaleModel(size_t modelId, const float3& cords);
 
     ~ScaleModel() override = default;
 
@@ -140,8 +138,7 @@ public:
 
 private:
     size_t modelId;
-
-    float kx, ky, kz;
+    float3 cords;
 };
 
 class TransformModel : public ModelCommand {

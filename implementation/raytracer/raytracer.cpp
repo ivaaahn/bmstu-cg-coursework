@@ -131,7 +131,7 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene> &scene, const std::shared
 
     queue.enqueueReadBuffer(bImg, CL_TRUE, 0, hImgLen * sizeof(cl_uchar), hImg);
 
-//    std::cout << "enqueueReadBuffer ok" << std::endl;
+    std::cout << "enqueueReadBuffer ok" << std::endl;
 
 }
 

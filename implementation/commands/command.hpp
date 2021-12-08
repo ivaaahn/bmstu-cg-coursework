@@ -5,6 +5,7 @@
 #ifndef __LAB_03_COMMAND_HPP__
 #define __LAB_03_COMMAND_HPP__
 
+
 class Command {
 public:
     Command() = default;

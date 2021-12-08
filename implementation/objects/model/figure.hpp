@@ -7,13 +7,18 @@
 
 #include "math/linalg.hpp"
 #include "objects/material/material.hpp"
-#include "objects/model/figure.hpp"
 #include <ray/ray.hpp>
 #include <CL/cl.hpp>
+
 using namespace linalg::aliases;
 
 #define NP 5000
 #define NF 8000
+
+enum FigureType {
+    POLYGONAL,
+    SPHERE,
+};
 
 // TODO add material support
 typedef struct __attribute__ ((packed)) _raw_figure {
@@ -23,32 +28,35 @@ typedef struct __attribute__ ((packed)) _raw_figure {
     cl_int num_of_points;
     cl_int num_of_faces;
     raw_material material;
+    cl_float3 center;
+    cl_float radius;
+    int fig_type;  // пока что у полигона - 0, а у сферы - 1
 } raw_figure;
 
 
 class Figure {
 protected:
     Material _material;
-    float3 _center {};
 
 public:
-    Figure(const Material& m, const float3 &center) : _material(m), _center(center) {}
-
     Figure() = default;
 
-    virtual bool rayIntersect(const std::shared_ptr<Ray>& ray, float& distTo1stIntersect, float3& N, float3& hit) const = 0;
+    explicit Figure(const Material& m) : _material(m) {}
+
+    virtual bool
+    rayIntersect(const std::shared_ptr<Ray>& ray, float& distTo1stIntersect, float3& N, float3& hit) const = 0;
 
     virtual void transform(const float3& move, const float3& scale, const float3& rotate) = 0;
-
-    virtual raw_figure clFormat() const = 0;
 
     virtual ~Figure() = 0;
 
     [[nodiscard]] const Material& getMaterial() const { return this->_material; }
 
-    [[nodiscard]] const float3& getCenter() const { return this->_center; }
+    [[nodiscard]] virtual float3 getCenter() const = 0;
 
-    raw_material clMaterial() const { return _material.clFormat(); }
+    [[nodiscard]] raw_material clMaterial() const { return _material.clFormat(); }
+
+    [[nodiscard]] virtual raw_figure clFormat() const = 0;
 };
 
 #endif //__CG_COURSEWORK_FIGURE_HPP__
