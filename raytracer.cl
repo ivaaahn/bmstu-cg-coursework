@@ -34,6 +34,7 @@ typedef struct __attribute__ ((packed)) _cl_tag_Material {
 	float3 diffuse;
 	float specularExp;
 	float refIdx;
+    float ambient;
 } Material;
 
 #define NP 5000
@@ -53,70 +54,6 @@ typedef struct __attribute__ ((packed)) _cl_tag_RawFigure {
 
 
 
-// float3 reflect(float3 I, float3 N) {
-//     return I - N * 2 * dot(I, N);
-// }
-
-// Define math functions
-// double3 UnitVector(double3 v) {
-// 	return v / length(v);
-// }
-
-// double SquaredLength(double3 m_dE) {
-// 	return m_dE.x * m_dE.x + m_dE.y * m_dE.y + m_dE.z * m_dE.z;
-// }
-
-// bool Refract(const double3 v, const double3 n, double NiOverNt, double3 refracted) {
-// 	double3 vUV = UnitVector(v);
-// 	double dDT = dot(vUV, n);
-// 	double dDiscriminant = 1.0 - (NiOverNt * NiOverNt * (1 - dDT * dDT));
-// 	if (dDiscriminant > 0) {
-// 		refracted = NiOverNt * (vUV - (n * dDT)) - (n * sqrt(dDiscriminant));
-// 		return true;
-// 	}
-// 	else return false;
-// }
-// double schlick(double cosine, double ref_idx) {
-// 	double d0 = (1 - ref_idx) / (1 + ref_idx);
-// 	d0 = d0 * d0;
-// 	return d0 + (1 - d0)*pow((1 - cosine), 5);
-// }
-
-// double3 Color(const Ray *r, sObject *x, Material *m, const int ObjLen, const double3 *rus, uint2 randomid, int depth) {
-// 	HitRecord rec;
-// 	if (worldHit(x, m, ObjLen, *r, &rec)) {
-// 		Ray scattered;
-// 		double3 attenuation;
-// 		// OpenCL does not support recursive functions, so the ray tracer is limited to primary rays only
-// 		if (depth < 1 && scatter(&rec.m_curmat, *r, &rec, &attenuation, &scattered, rus, randomid)) {
-// 			return (double3)attenuation; //*Color(&scattered, x, m, ObjLen, rus, randomid, depth + 1);
-// 		}
-// 		else {
-// 			return (double3)(0);
-// 		}
-// 	}
-// 	else {
-// 		double t1 = 0.5*(UnitVector(r->b).y + 1.0);
-// 		return (1.0 - t1) + (t1 * (double3)(0.5, 0.7, 1.0));
-// 	}
-// // }
-// Ray getRay(double s, double t, int2 dims, Camera cam, const double3 *rud, uint2 randomid) {
-
-// 	double dHalfHeight = tan(cam.Fov*M_PI / 360);
-// 	double dHalfWidth = (dims.x / dims.y) * dHalfHeight;
-// 	double dFocusDist = length(cam.lookFrom - cam.lookAt);
-// 	double3 vW = UnitVector(cam.lookFrom - cam.lookAt);
-// 	double3 vU = UnitVector(cross(cam.viewUp, vW));
-// 	double3 vV = cross(vW, vU);
-// 	double3 vOrigin = cam.lookFrom;
-// 	double3 vLowerLeftCorner = vOrigin - (dHalfWidth * dFocusDist * vU) - (dHalfHeight * dFocusDist * vV) - (dFocusDist * vW);
-// 	double3 vHorizontal = 2 * dHalfWidth*dFocusDist*vU;
-// 	double3 vVertical = 2 * dHalfHeight*dFocusDist*vV;
-// 	double3 vRD = (cam.aperture / 2) * (rud[tenrand(randomid)] / 5.234);
-// 	double3 vOffset = vU * vRD.x + vV * vRD.y;
-// 	return (Ray) { (double3)(vOrigin + vOffset), (double3)(vLowerLeftCorner + (s * vHorizontal) + (t * vVertical) - vOrigin - vOffset) };
-// }
-
 float3 refract(const float3 I, float3 N, float eta_t, float eta_i) { // Snell's law
     float cosi = -max(-1.f, min(1.f, dot(I, N)));
 
@@ -135,25 +72,38 @@ float3 refract(const float3 I, float3 N, float eta_t, float eta_i) { // Snell's 
     return k < 0 ? (float3)(1.f, 0.f, 0.f) : I*eta + N*(eta*cosi - sqrt(k));
 }
 
-void getRay(Ray *ray, int w, int h, int2 dim, Camera *cam) {
-    float x = w + 0.5 - dim.s0 / 2.;
-    float y = -(h + 0.5) + dim.s1 / 2.;
-    float z = -dim.s1 / (2. * tan(cam->fov / 2.));
-
-
-    // float x = (2 * (w + 0.5) / (float)dim.s0 - 1) * tan(cam->fov / 2.) * dim.s0 / (float)dim.s1;
-    // float y = -(2 * (h + 0.5) / (float)dim.s1 - 1) * tan(cam->fov / 2.);
-
-    ray->src = cam->position;
-    ray->dir = normalize((float3)(x, y, z)); 
-    
+void RayInit(Ray *ray, float3 src, float3 dir)
+{
+    ray->src = src;
+    ray->dir = dir; 
     ray->invdir = 1 / ray->dir;
-
-    // printf("%f %f %f\n", ray->invdir.x, ray->invdir.y, ray->invdir.z);
-
     ray->sign.x = (ray->invdir.x < 0);
     ray->sign.y = (ray->invdir.y < 0);
     ray->sign.z = (ray->invdir.z < 0);
+}
+
+
+void getRay(Ray *ray, int w, int h, int2 dim, Camera *cam) {
+    float dir_x = (w + 0.5) - dim.s0 / 2.;
+    float dir_y = -(h + 0.5) + dim.s1 / 2.;
+    float dir_z = -dim.s1 / (2. * tan(cam->fov / 2.));
+
+    RayInit(ray, cam->position, normalize((float3)(dir_x, dir_y, dir_z)));
+
+    // float x = (2 * (w + 0.5) / (float)dim.s0 - 1) * tan(cam->fov / 2.) * dim.s0 / (float)dim.s1;
+    // float y = -(2 * (h + 0.5) / (float)dim.s1 - 1) * tan(cam->fov / 2.);
+    
+
+    // ray->src = cam->position;
+    // ray->dir = normalize((float3)(x, y, z)); 
+    
+    // ray->invdir = 1 / ray->dir;
+
+    // printf("%f %f %f\n", ray->invdir.x, ray->invdir.y, ray->invdir.z);
+
+    // ray->sign.x = (ray->invdir.x < 0);
+    // ray->sign.y = (ray->invdir.y < 0);
+    // ray->sign.z = (ray->invdir.z < 0);
 
     // printf("%d %d %d\n", ray->sign.x, ray->sign.y, ray->sign.z);
 }
@@ -282,7 +232,7 @@ float3 getTriangleNormal(global const RawFigure *fig, const int3 face, const Ray
 
 
 bool rayTriangleModelIntersect(global const RawFigure *fig, const Ray *ray, float *distTo1stIntersect, float3 *N, float3 *hit) {
-    // if (!rayBoxIntersect(fig, ray)) return false;
+    // if (fig->fig_type == POLYGONAL && !rayBoxIntersect(fig, ray)) return false;
 
     float faceDist = MAXFLOAT;
     float currDist;
@@ -307,8 +257,10 @@ bool rayTriangleModelIntersect(global const RawFigure *fig, const Ray *ray, floa
     return true;
 }
 
-
-
+#define PLANE_Y 4
+#define PLANE_X_BOUNDS 12
+#define PLANE_Z_MIN (-30)
+#define PLANE_Z_MAX 0
 
 bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray *ray, float3 *hit, float3 *N, Material *mat) {
     float figuresDist = MAXFLOAT;
@@ -338,34 +290,34 @@ bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray 
     }
 
     float checkerboard_dist = MAXFLOAT;
-    if (fabs(ray->dir.y) > EPS)
+    if (ray->dir.y > EPS || ray->dir.y < -EPS)
     {
-        float d = -(ray->src.y + 4) / ray->dir.y; // the checkerboard plane has equation y = -4
+        float d = -(ray->src.y + PLANE_Y) / ray->dir.y; // the checkerboard plane has equation y = -1
         float3 pt = ray->src + ray->dir * d;
- 
-        if (d > EPS && fabs(pt.x) < 10 && pt.z < -10 && pt.z > -30 && d < figuresDist) 
+        
+
+
+        if (d > EPS && fabs(pt.x) < PLANE_X_BOUNDS && pt.z < PLANE_Z_MAX && pt.z > PLANE_Z_MIN && d < figuresDist) 
         {
             checkerboard_dist = d;
             *hit = pt;
             *N = (float3)(0, 1, 0);
-            mat->diffuse = ((int)(0.5 * hit->x + 1000) + (int)(0.5 * hit->z)) & 1 ? (float3)(.3, .3, .3) : (float3)(.3, .2, .1);
-            // mat->diffuse *= 0.3;
+            mat->diffuse = ((int)(0.5 * pt.x + 1000) + (int)(0.5 * pt.z)) & 1 ? (float3)(0.3, 0.3, 0.3) : (float3)(0.3, 0.2, 0.1);
+            mat->albedo = (float4)(0.6,0.3,0.1,0.0);
+            mat->specularExp = 2;
+            mat->refIdx=1;
+            mat->ambient=0.125;
+            // printf("mat->diffuse: (%f, %f, %f)", mat->diffuse.x, mat->diffuse.y, mat->diffuse.z);
         }
     }
 
     return min(figuresDist, checkerboard_dist) < 1000;
-
-    // printf("sceneIsIntersect(): [2] figuresDist == %f", figuresDist);
-
-    // return figuresDist < 1000;
 }
 
 
 float3 reflect(const float3 I, const float3 N) {
     return I - N * 2.f * dot(I, N);
 }
-
-
 
 
 
@@ -396,66 +348,10 @@ float3 _getColor(global const RawFigure *fList, int flLen, global const Light *l
 
     float4 alb = m->albedo;
     
-    return m->diffuse*DLI*alb[0] + (float3)(1., 1., 1.)*SLI*alb[1] + reflect_cf*alb[2] + refract_cf*alb[3];
+    return m->diffuse*DLI*alb[0] + (float3)(1., 1., 1.)*SLI*alb[1] + reflect_cf*alb[2] + refract_cf*alb[3] + (float3)(1., 1., 1.)*m->ambient;
 }
 
 
-
-
-/*
-
-Color get_color(X: Color, Y: Color, hit: HitData);
-
-Ray get_left_ray();
-Ray get_right_ray()
-
-
-Color X;
-Color Y;
-
-class HitData:
-    exitst: bool
-    ray: Ray
-    mat: Material
-    hit: Point
-    norm: Vector
-    left_color: Color
-    depth: char 
-
-depth = 0;
-
-stack = [];
-
-curr_color = BGColor(); // == right_color
-
-while(true):
-    while curr.exist:
-        new_depth = stack ? stack.peek().depth + 1 : 0
-
-        stack.push(curr, new_depth)
-        stack.push(curr, new_depth)
-        curr = getLeft(curr)
-
-        curr.exist = new_depth == 2 ? false : intersect()
-
-    if stack.size() == 0:
-        return curr_color
-
-    curr = stack.pop();
-
-
-    if stack.size() > 0 and stack.peek() == curr: // значит поднялись по левой ветке
-        stack.peek().left_info = curr_color;
-        curr_color = BGColor();
-        curr = getRight(curr)
-        curr.exist = intersect()
-
-    else:
-        curr_color = getColor(curr.left_color, curr_color)
-        curr.exist = false;
-
-
-*/
 
 typedef struct _ray_hit_data {
     char idx;
@@ -468,11 +364,10 @@ typedef struct _ray_hit_data {
     char depth;
 } RayHitData;
 
-#define STACK_LEN 16
+#define STACK_LEN 8
 #define STACK_MAX STACK_LEN - 1
 
-#define CONSTRAINT 2
-
+#define CONSTRAINT 1
 
 
 float3 getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, Ray *ray, int i, int j) {
@@ -487,7 +382,7 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
     d.ray = *ray;
     d.hits = sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
 
-    float3 curr_color = (float3)(0.5, 0.5, 0.5);
+    float3 curr_color = (float3)(0.1, 0.1, 0.1);
 
     while (true) 
     {
@@ -504,7 +399,7 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
             d.ray.src = dot(d.ray.dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
             d.idx = id++;
 
-            // stack.peek().depth на самом деле, но так тоже можно...
+           
             d.hits = (stack[top].depth >= CONSTRAINT) ? false : sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
         }
 
@@ -600,7 +495,6 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
 kernel void Render(global uchar *pixels,
                    global const RawFigure *figList,
                    global const Light *lightList,
-                //    global const float8 *materials,
                    global const float4 *cam,
                    global const int2 *dims,
                    global const int *flLen,

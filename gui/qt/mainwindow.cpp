@@ -11,7 +11,7 @@
 #include "drawer/factory/qt_drawer_factory.hpp"
 #include "../../consts.hpp"
 
-#define CAM_SHIFT 1
+#define CAM_SHIFT 2
 
 #define NONE_TXT "None"
 
