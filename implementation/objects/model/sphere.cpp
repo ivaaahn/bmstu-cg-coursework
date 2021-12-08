@@ -60,9 +60,9 @@ void Sphere::_loadCenter(const std::shared_ptr<std::ifstream>& srcFile) {
     this->_center = float3{x, y, z};
 }
 
-void Sphere::transform(const float3& move, const float3& scale, const float3& rotate) {
-//TODO
-}
+//void Sphere::transform(const float3& move, const float3& scale, const float3& rotate) {
+////TODO
+//}
 
 raw_figure Sphere::clFormat() const {
     return {
@@ -76,5 +76,13 @@ raw_figure Sphere::clFormat() const {
             cl_float{_radius},
             FigureType::SPHERE,
     };
+}
+
+void Sphere::translate(const float3& value) {
+    this->_center += value;
+}
+
+void Sphere::scale(const float3& value) {
+    this->_radius *= value.x;
 }
 

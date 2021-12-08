@@ -69,7 +69,7 @@ void MainWindow::on_move_btn_clicked() {
     if (!this->checkModel()) return;
 
     try {
-        this->facade->execute(std::make_shared<MoveModel>(currModId(), this->_readCoords()));
+        this->facade->execute(std::make_shared<TranslateModel>(currModId(), this->_readCoords()));
         this->updateScene();
     } catch (const BaseException& ex) {
         QMessageBox::warning(this, "Error", QString(ex.what()));

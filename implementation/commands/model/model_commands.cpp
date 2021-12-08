@@ -10,20 +10,20 @@
 
 AddModel::AddModel(std::shared_ptr<Figure> model) : model(std::move(model)) {}
 
-LoadModel::LoadModel(std::string filename) : filename(std::move(filename)) {}
+//LoadModel::LoadModel(std::string filename) : filename(std::move(filename)) {}
 
 LoadTriangularModel::LoadTriangularModel(std::string filename) : filename(std::move(filename)) {}
 
-MoveModel::MoveModel(size_t modelId, const float3& cords) : modelId(modelId), cords(cords) {}
+RemoveModel::RemoveModel(size_t modelId) : value(modelId) {}
 
-RemoveModel::RemoveModel(size_t modelId) : modelId(modelId) {}
+TranslateModel::TranslateModel(size_t modelId, const float3& value) : modelId(modelId), value(value) {}
 
-RotateModel::RotateModel(size_t modelId, const float3& cords) : modelId(modelId), cords(cords) {}
+RotateModel::RotateModel(size_t modelId, const float3& value) : modelId(modelId), value(value) {}
 
-ScaleModel::ScaleModel(size_t modelId, const float3& cords) : modelId(modelId), cords(cords) {}
+ScaleModel::ScaleModel(size_t modelId, const float3& value) : modelId(modelId), value(value) {}
 
-TransformModel::TransformModel(size_t modelId, const float3& move, const float3& scale, const float3& rotate)
-        : modelId(modelId), move(move), scale(scale), rotate(rotate) {}
+//TransformModel::TransformModel(size_t modelId, const float3& move, const float3& scale, const float3& rotate)
+//        : modelId(modelId), move(move), scale(scale), rotate(rotate) {}
 
 LoadSphere::LoadSphere(std::string filename) : filename(std::move(filename)) {}
 
@@ -39,15 +39,15 @@ void AddModel::execute() {
     SceneManagerCreator().getManager()->getScene()->addModel(this->model);
 }
 
-void LoadModel::execute() {
-//    auto load_manager = LoadManagerCreator().getManager();
-//    load_manager->setFigureLoader(std::make_shared<>())
-//
-//    load_manager->setDirector(std::make_shared<ModelDirector>());
-//
-//    auto model = load_manager->load(filename);
-//    SceneManagerCreator().getManager()->getScene()->add(model);
-}
+//void LoadModel::execute() {
+////    auto load_manager = LoadManagerCreator().getManager();
+////    load_manager->setFigureLoader(std::make_shared<>())
+////
+////    load_manager->setDirector(std::make_shared<ModelDirector>());
+////
+////    auto model = load_manager->load(filename);
+////    SceneManagerCreator().getManager()->getScene()->add(model);
+//}
 
 void LoadSphere::execute() {
     auto load_manager = LoadManagerCreator().getManager();
@@ -66,29 +66,41 @@ void LoadTriangularModel::execute() {
 void RemoveModel::execute() {
     auto scene = SceneManagerCreator().getManager()->getScene();
     auto modelsIt = scene->modelsBegin();
-    std::advance(modelsIt, this->modelId);
+    std::advance(modelsIt, this->value);
     scene->removeModel(modelsIt);
 }
 
-void MoveModel::execute() {
-    TransformModel(this->modelId, this->cords, float3{1.}, float3{0.}).execute();
-}
-
-
-void RotateModel::execute() {
-    TransformModel(this->modelId, float3{0.}, float3{1.}, this->cords).execute();
-}
-
-void ScaleModel::execute() {
-    TransformModel(this->modelId, float3{0.}, this->cords, float3{1.}).execute();
-}
-
-
-void TransformModel::execute() {
+void TranslateModel::execute() {
     auto sceneManager = SceneManagerCreator().getManager();
     auto modelsIt = sceneManager->getScene()->modelsBegin();
 
     std::advance(modelsIt, modelId);
-    (*modelsIt)->transform(move, scale, rotate);
+    (*modelsIt)->translate(value);
 }
+
+
+void RotateModel::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    auto modelsIt = sceneManager->getScene()->modelsBegin();
+
+    std::advance(modelsIt, modelId);
+    (*modelsIt)->rotate(value);
+}
+
+void ScaleModel::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    auto modelsIt = sceneManager->getScene()->modelsBegin();
+
+    std::advance(modelsIt, modelId);
+    (*modelsIt)->scale(value);
+}
+
+
+//void TransformModel::execute() {
+//    auto sceneManager = SceneManagerCreator().getManager();
+//    auto modelsIt = sceneManager->getScene()->modelsBegin();
+//
+//    std::advance(modelsIt, value);
+//    (*modelsIt)->transform(move, scale, rotate);
+//}
 

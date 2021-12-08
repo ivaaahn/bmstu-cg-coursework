@@ -45,9 +45,13 @@ private:
 
     static void _rotZ(float3& p, float angle);
 
-    static void _scale(float3& point, const float3& scale);
+//    static void _scale(float3& point, const float3& scale);
 
-    void _rot(float3& point, const float3& rotate);
+//    void _rot(float3& point, const float3& rotate);
+
+    void rotate(const float3& value) override;
+    void translate(const float3& value) override;
+    void scale(const float3& value) override;
 
     [[nodiscard]] bool _rayBoxIntersect(const std::shared_ptr<Ray>& ray) const;
 
@@ -71,7 +75,7 @@ public:
     bool
     rayIntersect(const std::shared_ptr<Ray>& ray, float& distTo1stIntersect, float3& N, float3& hit) const override;
 
-    void transform(const float3& move, const float3& scale, const float3& rotate) override;
+//    void transform(const float3& move, const float3& scale, const float3& rotate) override;
 
     [[nodiscard]] raw_figure clFormat() const override;
 

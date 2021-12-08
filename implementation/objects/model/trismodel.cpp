@@ -306,65 +306,100 @@ void TriangularModel::_rotZ(float3& p, float angle) {
     p.y = p.y * _cos + _x * _sin;
 }
 
-void TriangularModel::_scale(float3& point, const float3& scale) {
-    point.x *= scale.x;
-    point.y *= scale.y;
-    point.z *= scale.z;
-}
+//void TriangularModel::_scale(float3& point, const float3& scale) {
+//    point.x *= scale.x;
+//    point.y *= scale.y;
+//    point.z *= scale.z;
+//}
 
-void TriangularModel::_rot(float3& point, const float3& rotate) {
-    this->_rotX(point, rotate.x);
-    this->_rotY(point, rotate.y);
-    this->_rotZ(point, rotate.z);
-}
+//void TriangularModel::_rot(float3& point, const float3& rotate) {
+//    this->_rotX(point, rotate.x);
+//    this->_rotY(point, rotate.y);
+//    this->_rotZ(point, rotate.z);
+//}
 
-void TriangularModel::transform(const float3& move, const float3& scale, const float3& rotate) {
-    std::cerr << "Move: (" << move.x << ", " << move.y << ", " << move.z << ")" << std::endl;
-    std::cerr << "Scale: (" << scale.x << ", " << scale.y << ", " << scale.z << ")" << std::endl;
-    std::cerr << "Rotate: (" << rotate.x << ", " << rotate.y << ", " << rotate.z << ")" << std::endl;
-
-    auto center = this->getCenter();
-    std::cout << "center = (" << center.x << ' ' << center.y << ' ' << center.z << ')' << std::endl;
-
-#pragma omp parallel for num_threads(8)
-    for (int i = 0; i < this->_points.size(); ++i) {
-        _points[i] -= center;
-
-        this->_rot(_points[i], rotate);
-        this->_scale(_points[i], scale);
-
-        _points[i] += center;
-        _points[i] += move;
-    }
-
-    auto bbox_pmin_new = float3{1.} * std::numeric_limits<float>::max();
-    auto bbox_pmax_new = float3{1.} * std::numeric_limits<float>::min();
-
-    for (auto& point: this->_corners) {
-        point -= center;
-
-        this->_rot(point, rotate);
-        this->_scale(point, scale);
-
-        point += center;
-        point += move;
-
-        for (int i = 0; i < 3; ++i) {
-            bbox_pmin_new[i] = std::min(bbox_pmin_new[i], point[i]);
-            bbox_pmax_new[i] = std::max(bbox_pmax_new[i], point[i]);
-        }
-    }
-
-    this->_box_bounds[0] = bbox_pmin_new;
-    this->_box_bounds[1] = bbox_pmax_new;
-}
-
+//void TriangularModel::transform(const float3& move, const float3& scale, const float3& rotate) {
+//    std::cerr << "Move: (" << move.x << ", " << move.y << ", " << move.z << ")" << std::endl;
+//    std::cerr << "Scale: (" << scale.x << ", " << scale.y << ", " << scale.z << ")" << std::endl;
+//    std::cerr << "Rotate: (" << rotate.x << ", " << rotate.y << ", " << rotate.z << ")" << std::endl;
+//
+//    auto center = this->getCenter();
+//    std::cout << "center = (" << center.x << ' ' << center.y << ' ' << center.z << ')' << std::endl;
+//
+//#pragma omp parallel for num_threads(8)
+//    for (int i = 0; i < this->_points.size(); ++i) {
+//        _points[i] -= center;
+//
+//        this->_rot(_points[i], rotate);
+//        this->_scale(_points[i], scale);
+//
+//        _points[i] += center;
+//        _points[i] += move;
+//    }
+//
+//    auto bbox_pmin_new = float3{1.} * std::numeric_limits<float>::max();
+//    auto bbox_pmax_new = float3{1.} * std::numeric_limits<float>::min();
+//
+//    for (auto& point: this->_corners) {
+//        point -= center;
+//
+//        this->_rot(point, rotate);
+//        this->_scale(point, scale);
+//
+//        point += center;
+//        point += move;
+//
+//        for (int i = 0; i < 3; ++i) {
+//            bbox_pmin_new[i] = std::min(bbox_pmin_new[i], point[i]);
+//            bbox_pmax_new[i] = std::max(bbox_pmax_new[i], point[i]);
+//        }
+//    }
+//
+//    this->_box_bounds[0] = bbox_pmin_new;
+//    this->_box_bounds[1] = bbox_pmax_new;
+//}
+//
 float3 TriangularModel::getCenter() const {
     auto center = float3{0.};
     for (const auto& p: this->_corners)
         center += p;
 
     return center / 8;
+}
+
+void TriangularModel::rotate(const float3& value) {
+    auto center = this->getCenter();
+
+#pragma omp parallel for num_threads(16)
+    for (int i = 0; i < this->_points.size(); ++i) {
+        this->_points[i] -= center;
+        this->_rotX(this->_points[i], value.x);
+        this->_rotY(this->_points[i], value.y);
+        this->_rotZ(this->_points[i], value.z);
+        this->_points[i] += center;
+    }
+}
+
+void TriangularModel::translate(const float3& value) {
+#pragma omp parallel for num_threads(16)
+    for (int i = 0; i < this->_points.size(); ++i) {
+        this->_points[i] += value;
+    }
+}
+
+void TriangularModel::scale(const float3& value) {
+    auto center = this->getCenter();
+
+#pragma omp parallel for num_threads(16)
+    for (int i = 0; i < this->_points.size(); ++i) {
+        this->_points[i] -= center;
+
+        this->_points[i].x *= value.x;
+        this->_points[i].y *= value.y;
+        this->_points[i].z *= value.z;
+
+        this->_points[i] += center;
+    }
 }
 
 

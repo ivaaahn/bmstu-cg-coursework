@@ -28,11 +28,15 @@ public:
 
     explicit Sphere(const std::shared_ptr<std::ifstream>& srcFile);
 
+    void rotate(const float3& value) override {};
+    void translate(const float3& value) override;
+    void scale(const float3& value) override;
+
     [[nodiscard]] float getRadius() const { return this->_radius; }
 
     bool rayIntersect(const std::shared_ptr<Ray> &ray, float& distTo1stIntersect, float3& N, float3& hit) const final;
 
-    void transform(const float3& move, const float3& scale, const float3& rotate) final;
+//    void transform(const float3& move, const float3& scale, const float3& rotate) final;
 
     [[nodiscard]] float3 getCenter() const override { return this->_center; }
 

@@ -39,19 +39,19 @@ private:
 //    std::shared_ptr<size_t> &count;
 //};
 
-class LoadModel : public ModelCommand {
-public:
-    LoadModel() = delete;
-
-    explicit LoadModel(std::string filename);
-
-    ~LoadModel() override = default;
-
-    void execute() override;
-
-private:
-    std::string filename;
-};
+//class LoadModel : public ModelCommand {
+//public:
+//    LoadModel() = delete;
+//
+//    explicit LoadModel(std::string filename);
+//
+//    ~LoadModel() override = default;
+//
+//    void execute() override;
+//
+//private:
+//    std::string filename;
+//};
 
 
 class LoadSphere : public ModelCommand {
@@ -82,19 +82,19 @@ private:
     std::string filename;
 };
 
-class MoveModel : public ModelCommand {
+class TranslateModel : public ModelCommand {
 public:
-    MoveModel() = delete;
+    TranslateModel() = delete;
 
-    MoveModel(size_t modelId, const float3& cords);
+    TranslateModel(size_t modelId, const float3& value);
 
-    ~MoveModel() override = default;
+    ~TranslateModel() override = default;
 
     void execute() override;
 
 private:
     size_t modelId;
-    float3 cords;
+    float3 value;
 };
 
 class RemoveModel : public ModelCommand {
@@ -108,14 +108,14 @@ public:
     void execute() override;
 
 private:
-    size_t modelId;
+    size_t value;
 };
 
 class RotateModel : public ModelCommand {
 public:
     RotateModel() = delete;
 
-    RotateModel(size_t modelId, const float3& cords);
+    RotateModel(size_t modelId, const float3& value);
 
     ~RotateModel() override = default;
 
@@ -123,14 +123,14 @@ public:
 
 private:
     size_t modelId;
-    float3 cords;
+    float3 value;
 };
 
 class ScaleModel : public ModelCommand {
 public:
     ScaleModel() = delete;
 
-    ScaleModel(size_t modelId, const float3& cords);
+    ScaleModel(size_t modelId, const float3& value);
 
     ~ScaleModel() override = default;
 
@@ -138,23 +138,23 @@ public:
 
 private:
     size_t modelId;
-    float3 cords;
+    float3 value;
 };
 
-class TransformModel : public ModelCommand {
-public:
-    TransformModel() = delete;
-
-    TransformModel(size_t modelId, const float3& move, const float3& scale, const float3& rotate);
-
-    ~TransformModel() override = default;
-
-    void execute() override;
-
-private:
-    size_t modelId;
-
-    float3 move, scale, rotate;
-};
+//class TransformModel : public ModelCommand {
+//public:
+//    TransformModel() = delete;
+//
+//    TransformModel(size_t value, const float3& move, const float3& scale, const float3& rotate);
+//
+//    ~TransformModel() override = default;
+//
+//    void execute() override;
+//
+//private:
+//    size_t value;
+//
+//    float3 move, scale, rotate;
+//};
 
 #endif //__CG_COURSEWORK_MODEL_COMMANDS_HPP__
