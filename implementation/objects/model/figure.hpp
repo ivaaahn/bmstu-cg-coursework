@@ -52,7 +52,11 @@ public:
     virtual void scale(const float3& value) = 0;
     virtual ~Figure() = 0;
 
+    void editMaterial(const Material &mat) { this->_material = mat; }
+
     [[nodiscard]] const Material& getMaterial() const { return this->_material; }
+
+    [[nodiscard]] Material getMaterial() { return this->_material; }
 
     [[nodiscard]] virtual float3 getCenter() const = 0;
 

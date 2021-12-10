@@ -13,10 +13,10 @@
 #include "drawer/drawer.hpp"
 #include "facade/facade.hpp"
 
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
 
 class MainWindow : public QMainWindow {
 Q_OBJECT
@@ -26,68 +26,106 @@ public:
 
     ~MainWindow() override;
 
-protected:
-//    [[nodiscard]] size_t getCamerasCount() const;
-//
-//    [[nodiscard]] size_t getModelsCount() const;
+private:
+    bool _modSelected();
 
-//    bool canRemoveCamera(size_t id);
-//
-//    bool canRemoveModel(size_t id);
+    bool _camSelected();
 
-    bool modelSelected();
-
-    bool cameraSelected();
+    bool _lightSelected();
 
     void setupScene();
 
     void updateScene();
 
-    void resetModel();
+    void _modReset();
 
-    void resetCamera();
+    void _camReset();
 
-    size_t getCurrCameraId();
+    size_t _currCamId();
 
-    size_t currModId();
+    size_t _currModId();
+
+    size_t _currLightId();
 
     bool checkModel();
+
     bool checkCam();
 
     void updateLocation();
+    void updateLightInfo();
+    void _updateMaterialInfo();
+    void _updateSceneLightData();
+
+
+    float _readLightIntensity();
+    int _readRTreeH();
+    float _readSceneAmbient();
+    float3 _readModCoords();
+    Material _readMaterial();
+    float3 _readModColor();
+    float4 _readAlbedo();
+    float3 _readLightCoords();
+    float3 _readLocationCoords(int& turn, int& fov);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private slots:
 
+    void on_rtree_h_apply_btn_clicked();
+
     void on_move_btn_clicked();
+
     void on_scale_btn_clicked();
+
     void on_rotate_btn_clicked();
 
-    void on_load_model_btn_clicked();
-    void on_load_light_btn_clicked();
+    void on_mod_load_btn_clicked();
 
-    void on_add_light_btn_clicked();
-    void on_add_camera_btn_clicked();
+    void on_mod_rm_btn_clicked();
 
-    void on_change_camera_btn_clicked();
-    void on_change_model_btn_clicked();
+    void on_mat_apply_btn_clicked();
 
+    void on_mat_load_btn_clicked();
 
-    void on_left_btn_clicked();
-    void on_right_btn_clicked();
+    void on_light_apply_btn_clicked();
 
-    void on_up_btn_clicked();
-    void on_down_btn_clicked();
+    void on_light_add_btn_clicked();
 
-    void on_zoom_in_btn_clicked();
-    void on_zoom_out_btn_clicked();
+    void on_mod_switch_btn_clicked();
 
+    void on_light_switch_btn_clicked();
 
-    void on_rm_cam_btn_clicked();
-    void on_rm_light_btn_clicked();
-    void on_rm_mod_btn_clicked();
+    void on_light_load_btn_clicked();
+
+    void on_light_rm_btn_clicked();
+
+    void on_cam_add_btn_clicked();
+
+    void on_cam_rm_btn_clicked();
+
+    void on_cam_apply_btn_clicked();
+
+    void on_cam_turn_left_btn_clicked();
+
+    void on_cam_turn_right_btn_clicked();
+
+    void on_cam_move_left_btn_clicked();
+
+    void on_cam_move_right_btn_clicked();
+
+    void on_cam_move_up_btn_clicked();
+
+    void on_cam_move_down_btn_clicked();
+
+    void on_cam_turn_up_btn_clicked();
+
+    void on_cam_turn_down_btn_clicked();
+
+    void on_cam_zoom_in_btn_clicked();
+
+    void on_cam_zoom_out_btn_clicked();
+
 
 private:
 
@@ -97,8 +135,6 @@ private:
 
     std::shared_ptr<QGraphicsScene> scene;
     std::shared_ptr<Drawer> drawer;
-
-    float3 _readCoords();
 
     size_t last_cam_id = 0;
     size_t last_mod_id = 0;

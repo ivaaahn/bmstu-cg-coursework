@@ -3,6 +3,10 @@
 #define POLYGONAL 0
 #define SPHERE 1
 
+
+#define EPS 1e-5
+
+
 // Define C++ Classes as OpenCL structs
 typedef struct __attribute__ ((packed)) _cl_tag_Sphere {
     float3 center;
@@ -54,7 +58,7 @@ typedef struct __attribute__ ((packed)) _cl_tag_RawFigure {
 
 
 
-float3 refract(const float3 I, float3 N, float eta_t, float eta_i) { // Snell's law
+float3 refract(float3 I, float3 N, float eta_t, float eta_i) { // Snell's law
     float cosi = -max(-1.f, min(1.f, dot(I, N)));
 
 
@@ -69,7 +73,7 @@ float3 refract(const float3 I, float3 N, float eta_t, float eta_i) { // Snell's 
 
     float eta = eta_i / eta_t;
     float k = 1 - eta*eta*(1 - cosi*cosi);
-    return k < 0 ? (float3)(1.f, 0.f, 0.f) : I*eta + N*(eta*cosi - sqrt(k));
+    return k < 0 ? (float3)(1, 0, 0) : I*eta + N*(eta*cosi - sqrt(k));
 }
 
 void RayInit(Ray *ray, float3 src, float3 dir)
@@ -125,20 +129,17 @@ bool sphereIsIntersect(global const RawFigure *fig, const Ray *ray, float *distT
 
     float rad2 = fig->radius * fig->radius;
 
-    if (distToRaySqr > rad2)
-    {
-        return false;
-    }
+    if (distToRaySqr > rad2) return false;
 
     float halfChordLength = sqrt(rad2 - distToRaySqr);
 
     *distTo1stIntersect = dFromSrcToProjOfCenter - halfChordLength;
     float distTo2ndIntersect = dFromSrcToProjOfCenter + halfChordLength;
 
-    if (distTo2ndIntersect < 0) return false;
+    if (distTo2ndIntersect < EPS) return false;
 
 
-    if (*distTo1stIntersect < 0)
+    if (*distTo1stIntersect < EPS)
     {
         *distTo1stIntersect = distTo2ndIntersect;
     }
@@ -181,7 +182,6 @@ bool rayBoxIntersect(global const RawFigure *fig, const Ray *r) {
 
 
 
-#define EPS 1e-5
 
 bool rayTriangleFaceIntersect(global const RawFigure *fig, const Ray *ray, const int3 face, float *ray_tvalue) {
 //  find vectors for two edges sharing vertex[0]
@@ -321,7 +321,7 @@ float3 reflect(const float3 I, const float3 N) {
 
 
 
-float3 _getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, const Material *m, float3 hit, const Ray *ray, float3 N, float3 reflect_cf, float3 refract_cf) {
+float3 _getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, const Material *m, float3 hit, const Ray *ray, float3 N, float3 reflect_cf, float3 refract_cf, float sceneAmbientLight) {
     float DLI = 0, SLI = 0; // diffuse light intensity, specular light intensity
     global const Light *light = 0;
 
@@ -348,9 +348,8 @@ float3 _getColor(global const RawFigure *fList, int flLen, global const Light *l
 
     float4 alb = m->albedo;
     
-    return m->diffuse*DLI*alb[0] + (float3)(1., 1., 1.)*SLI*alb[1] + reflect_cf*alb[2] + refract_cf*alb[3] + (float3)(1., 1., 1.)*m->ambient;
+    return m->diffuse*DLI*alb[0] + (float3)(1., 1., 1.)*SLI*alb[1] + reflect_cf*alb[2] + refract_cf*alb[3] + (float3)(sceneAmbientLight, sceneAmbientLight, sceneAmbientLight)*m->ambient;
 }
-
 
 
 typedef struct _ray_hit_data {
@@ -364,13 +363,13 @@ typedef struct _ray_hit_data {
     char depth;
 } RayHitData;
 
-#define STACK_LEN 8
+#define STACK_LEN 16
 #define STACK_MAX STACK_LEN - 1
 
-#define CONSTRAINT 1
+// #define CONSTRAINT 1
 
 
-float3 getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, Ray *ray, int i, int j) {
+float3 getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, Ray *ray, float sceneAmbientLight, int rayTreeHeightMax) {
     RayHitData stack[STACK_LEN] = {};
     int top = -1;
 
@@ -382,7 +381,7 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
     d.ray = *ray;
     d.hits = sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
 
-    float3 curr_color = (float3)(0.1, 0.1, 0.1);
+    float3 curr_color = (float3)(21./255., 6./255., 44./255.) * sceneAmbientLight;
 
     while (true) 
     {
@@ -400,7 +399,7 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
             d.idx = id++;
 
            
-            d.hits = (stack[top].depth >= CONSTRAINT) ? false : sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
+            d.hits = (stack[top].depth >= rayTreeHeightMax) ? false : sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
         }
 
         if (top == -1) break;
@@ -413,19 +412,19 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
             // printf("(%d, %d): if... stacktop == %d, id == %d, depth == %d\n", i, j, top, d.idx, d.depth);
 
             stack[top].reflect_cf = curr_color;
-            curr_color = (float3)(0.5, 0.5, 0.5);
+            curr_color = (float3)(21./255., 6./255., 44./255.) * sceneAmbientLight;
 
             // get right child
             d.ray.dir = normalize(refract(d.ray.dir, d.N, d.m.refIdx, 1.f));         
             d.ray.src = dot(d.ray.dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
             d.idx = id++;
 
-            d.hits = (stack[top].depth >= CONSTRAINT) ? false : sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
+            d.hits = (stack[top].depth >= rayTreeHeightMax) ? false : sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
         }
         else
         {
             // printf("(%d, %d): else... stacktop == %d, id == %d, depth == %d\n", i, j, top, d.idx, d.depth);
-            curr_color = _getColor(fList, flLen, lList, llLen, &d.m, d.hit, &d.ray, d.N, d.reflect_cf, curr_color);
+            curr_color = _getColor(fList, flLen, lList, llLen, &d.m, d.hit, &d.ray, d.N, d.reflect_cf, curr_color, sceneAmbientLight);
             d.hits = false;
         }
     }
@@ -498,7 +497,9 @@ kernel void Render(global uchar *pixels,
                    global const float4 *cam,
                    global const int2 *dims,
                    global const int *flLen,
-                   global const int *llLen) {
+                   global const int *llLen,
+                   global const float *sceneAmbientLightArr,
+                   global const int *rayTreeHeightArr) {
 
     // printf("Render() start...\n");
     
@@ -506,6 +507,8 @@ kernel void Render(global uchar *pixels,
 	int2 dim = dims[0]; // Image Dimensions
 	int figListLen = flLen[0]; // objects in list
 	int lightListLen = llLen[0]; // lights in list
+    float sceneAmbientLight = sceneAmbientLightArr[0];
+    int rayTreeHeight = rayTreeHeightArr[0];
     // printf("L == %d\n\n", lightList[0].intensity);
     // printf("num_of_lights == %d\n", lightListLen);
 
@@ -538,7 +541,7 @@ kernel void Render(global uchar *pixels,
 
 	// Sphere sphere = { (float3)(figList[gid].s0, figList[gid].s1, figList[gid].s2), (float)figList[gid].s3 };
 
-    float3 c = getColor(figList, figListLen, lightList, lightListLen, &ray, i, j);
+    float3 c = getColor(figList, figListLen, lightList, lightListLen, &ray, sceneAmbientLight, rayTreeHeight);
 
     float max_ = max(c.s0, max(c.s1, c.s2));
     if (max_ > 1) c *= (1.f / max_);

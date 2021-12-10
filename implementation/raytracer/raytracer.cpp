@@ -55,16 +55,18 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
     auto *hDim = new cl_int2[1];                        // Dimensions
     auto *hFigSize = new cl_int[1];                     // Figures List's Size
     auto *hLightSize = new cl_int[1];                   // Lights List's Size
+    auto *hSceneAmbientLight = new cl_float[1];                   // Lights List's Size
+    auto *hRayTreeHeightMax = new cl_int[1];                   // Lights List's Size
 
     cl_uchar *hImg = drawer->getImage()->bits();
     int hImgLen = (int)drawer->getImage()->sizeInBytes();
 
-#pragma omp parallel for num_threads(8)
+#pragma omp parallel for num_threads(16)
     for (int i = 0; i < int(scene->_models.size()); ++i)
         hFigures[i] = scene->_models[i]->clFormat();
 
 
-#pragma omp parallel for num_threads(8)
+#pragma omp parallel for num_threads(16)
     for (int i = 0; i < int(scene->_lights.size()); ++i)
         hLights[i] = scene->_lights[i]->clFormat();
 
@@ -73,6 +75,9 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
     hDim[0] = {WIDTH, HEIGHT};
     hFigSize[0] = int(scene->_models.size());
     hLightSize[0] = int(scene->_lights.size());
+    hSceneAmbientLight[0] = scene->getAmbientLightIntensity();
+    hRayTreeHeightMax[0] = scene->getRTreeHeightMax();
+
 
     cl::Buffer bImg(this->ctx, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, hImgLen * sizeof(cl_uchar));
     cl::Buffer bFigures(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR,
@@ -87,7 +92,10 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
                         hFigSize);
     cl::Buffer bLightSize(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, 1 * sizeof(cl_int),
                           hLightSize);
-
+    cl::Buffer bSceneAmbientLight(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, 1 * sizeof(cl_float),
+                          hSceneAmbientLight);
+    cl::Buffer bRayTreeHeightMax(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, 1 * sizeof(cl_int),
+                          hRayTreeHeightMax);
 
     cl::Kernel kernel(this->program, "Render", nullptr);
     kernel.setArg(0, bImg);
@@ -97,6 +105,8 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
     kernel.setArg(4, bDim);
     kernel.setArg(5, bFigSize);
     kernel.setArg(6, bLightSize);
+    kernel.setArg(7, bSceneAmbientLight);
+    kernel.setArg(8, bRayTreeHeightMax);
 
     cl::CommandQueue queue(this->ctx, this->device);
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(NUM_OF_ELEMENTS));

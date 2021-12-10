@@ -48,12 +48,24 @@ public:
 
     explicit Material(const std::shared_ptr<std::ifstream>& srcFile);
 
-    const float4& getAlbedo() {
+    [[nodiscard]] const float4& getAlbedo() const{
         return this->_albedo;
     }
 
-    const float3& getDiffuseColor() {
+    [[nodiscard]] const float3& getDiffuseColor() const {
         return this->_diffuseColor;
+    }
+
+    [[nodiscard]] float getSpecExp() const {
+        return this->_specularExp;
+    }
+
+    [[nodiscard]] float getRefrIdx() const {
+        return this->_refIdx;
+    }
+
+    [[nodiscard]] float getAmbient() const {
+        return this->_ambient;
     }
 
     [[nodiscard]] float getSpecularExp() const {
@@ -62,7 +74,7 @@ public:
 
     [[nodiscard]] raw_material clFormat() const {
         return {
-                cl_float3{_albedo.x, _albedo.y, _albedo.z,},
+                cl_float4{_albedo[0], _albedo[1], _albedo[2], _albedo[3]},
                 cl_float3{_diffuseColor.x, _diffuseColor.y, _diffuseColor.z},
                 cl_float{_specularExp},
                 cl_float{_refIdx},

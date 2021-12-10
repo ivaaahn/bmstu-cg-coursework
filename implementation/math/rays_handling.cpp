@@ -30,8 +30,8 @@ float3 RaysHandling::castRayCPU(const std::shared_ptr<Ray> &ray, const std::shar
     float diffuseLightIntensity = 0, specularLightIntensity = 0;
     for (const auto &light: scene->_lights)
     {
-        float3 lightDir = normalize((light->getPosition() - hit));
-        float lightDist = linalg::distance2(light->getPosition(), hit);
+        float3 lightDir = normalize((light->getPos() - hit));
+        float lightDist = linalg::distance2(light->getPos(), hit);
 
         // checking if the point lies in the shadow of the light
         float3 shadowSrc = dot(lightDir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;

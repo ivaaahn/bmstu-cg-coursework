@@ -67,13 +67,6 @@ void SetCamera::execute() {
     sceneManager->setCurrentCamera(it);
 }
 
-
-//CountCameras::CountCameras(std::shared_ptr<size_t> &count) : count(count) {}
-//
-//void CountCameras::execute() {
-//    *(this->count) = SceneManagerCreator().getManager()->getScene()->getCamerasCount();
-//}
-//
 void GetLocation::execute() {
     auto sceneManager = SceneManagerCreator().getManager();
     auto it = sceneManager->getScene()->camBegin();

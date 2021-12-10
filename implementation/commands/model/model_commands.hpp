@@ -25,35 +25,6 @@ private:
     std::shared_ptr<Figure> model;
 };
 
-//class CountModels : public ModelCommand {
-//public:
-//    CountModels() = delete;
-//
-//    explicit CountModels(std::shared_ptr<size_t> &count);
-//
-//    ~CountModels() override = default;
-//
-//    void execute() override;
-//
-//private:
-//    std::shared_ptr<size_t> &count;
-//};
-
-//class LoadModel : public ModelCommand {
-//public:
-//    LoadModel() = delete;
-//
-//    explicit LoadModel(std::string filename);
-//
-//    ~LoadModel() override = default;
-//
-//    void execute() override;
-//
-//private:
-//    std::string filename;
-//};
-
-
 class LoadSphere : public ModelCommand {
 public:
     LoadSphere() = delete;
@@ -141,20 +112,34 @@ private:
     float3 value;
 };
 
-//class TransformModel : public ModelCommand {
-//public:
-//    TransformModel() = delete;
-//
-//    TransformModel(size_t value, const float3& move, const float3& scale, const float3& rotate);
-//
-//    ~TransformModel() override = default;
-//
-//    void execute() override;
-//
-//private:
-//    size_t value;
-//
-//    float3 move, scale, rotate;
-//};
+class GetModelInfo : public ModelCommand {
+public:
+    GetModelInfo() = delete;
+
+    GetModelInfo(size_t modelId, std::shared_ptr<Material>& mat);
+
+    ~GetModelInfo() override = default;
+
+    void execute() override;
+
+private:
+    size_t modelId;
+    std::shared_ptr<Material> &mat;
+};
+
+class EditModelMaterial : public ModelCommand {
+public:
+    EditModelMaterial() = delete;
+
+    EditModelMaterial(size_t modelId, const Material& mat);
+
+    ~EditModelMaterial() override = default;
+
+    void execute() override;
+
+private:
+    size_t modelId;
+    const Material &mat;
+};
 
 #endif //__CG_COURSEWORK_MODEL_COMMANDS_HPP__

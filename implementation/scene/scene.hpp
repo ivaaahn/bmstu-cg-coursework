@@ -16,11 +16,22 @@ using CamIterator = std::vector<std::shared_ptr<Camera>>::iterator;
 using ModelIterator = std::vector<std::shared_ptr<Figure>>::iterator;
 using LightIterator = std::vector<std::shared_ptr<Light>>::iterator;
 
+#define ALI_DEFAULT 0.5 // Ambient Light Intensity
+#define RTREE_HEIGHT_MAX 1
+
 class Scene {
 public:
     Scene();
 
     ~Scene() = default;
+
+    [[nodiscard]] float getAmbientLightIntensity() const { return this->ambient_light_intensity.x; }
+
+    void setAmbientLightIntensity(float value) { this->ambient_light_intensity = float3{value}; }
+
+    [[nodiscard]] int getRTreeHeightMax() const { return this->ray_tree_height_max; }
+
+    void setRTreeHeightMax(int value) { this->ray_tree_height_max = value; }
 
     void addCamera(const std::shared_ptr<Camera>& cam);
 
@@ -48,31 +59,15 @@ public:
     ModelIterator modelsEnd();
 
     LightIterator lightsBegin();
-
     LightIterator lightsEnd();
 
-
-//    void add(const std::shared_ptr<Object> &object);
-//
-//    void remove(const CamIterator &it);
-//
-//    CamIterator begin();
-//
-//    CamIterator end();
-//
-//    [[nodiscard]] ConstIterator begin() const;
-//
-//    [[nodiscard]] ConstIterator end() const;
-//
-//    [[nodiscard]] ConstIterator cbegin() const;
-//
-//    [[nodiscard]] ConstIterator cend() const;
-//
     std::vector<std::shared_ptr<Light>> _lights;
     std::vector<std::shared_ptr<Camera>> _cameras;
     std::vector<std::shared_ptr<Figure>> _models;
     std::vector<ColorRGB> framebuffer;
-//    std::shared_ptr<Object> obj;
+
+    float3 ambient_light_intensity{ALI_DEFAULT, ALI_DEFAULT, ALI_DEFAULT};
+    int ray_tree_height_max = RTREE_HEIGHT_MAX;
 };
 
 

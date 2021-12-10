@@ -28,3 +28,26 @@ void RemoveLight::execute() {
     std::advance(it, this->lightId);
     scene->removeLight(it);
 }
+
+void GetLightInfo::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    auto it = sceneManager->getScene()->lightsBegin();
+
+    std::advance(it, this->lightId);
+
+    *this->cords = (*it)->getPos();
+    *this->intens = (*it)->getIntensity();
+}
+
+EditLight::EditLight(size_t lightId, const float3& cords, float intens) :
+        lightId(lightId), cords(cords), intens(intens) {}
+
+void EditLight::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    auto it = sceneManager->getScene()->lightsBegin();
+
+    std::advance(it, this->lightId);
+
+    (*it)->setPos(this->cords);
+    (*it)->setIntensity(this->intens);
+}

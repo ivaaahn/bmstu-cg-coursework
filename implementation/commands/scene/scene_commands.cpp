@@ -14,6 +14,30 @@ void RenderScene::execute() {
 
     drawManager->setDrawer(this->drawer);
 
-//    this->drawer->clearScene();
     drawManager->draw(sceneManager->getScene(), sceneManager->getMainCamera());
+}
+
+EditAmbientLightIntensity::EditAmbientLightIntensity(float value) : value(value) {}
+
+void EditAmbientLightIntensity::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    sceneManager->getScene()->setAmbientLightIntensity(this->value);
+}
+
+GetAmbientLightIntensity::GetAmbientLightIntensity(std::shared_ptr<float>& value) : value(value) {}
+
+void GetAmbientLightIntensity::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    *this->value = sceneManager->getScene()->getAmbientLightIntensity();
+}
+
+
+void EditRTreeHeightMax::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    sceneManager->getScene()->setRTreeHeightMax(this->value);
+}
+
+void GetRTreeHeightMax::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    *this->value = sceneManager->getScene()->getRTreeHeightMax();
 }

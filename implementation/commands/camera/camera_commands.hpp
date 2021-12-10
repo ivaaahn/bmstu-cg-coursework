@@ -31,16 +31,6 @@ private:
 };
 
 
-//class LoadCamera : public CameraCommand {
-//public:
-//    explicit LoadCamera(std::string filename);
-//
-//    void execute() override;
-//
-//private:
-//    std::string filename;
-//};
-
 class MoveCamera : public CameraCommand {
 public:
     MoveCamera() = delete;
@@ -91,30 +81,17 @@ class GetLocation : public CameraCommand {
 public:
     GetLocation() = delete;
 
-    GetLocation(std::size_t camId, std::shared_ptr<float3>& cords) : camId(camId), cords(cords) {}
+    GetLocation(size_t camId, std::shared_ptr<float3>& cords) : camId(camId), cords(cords) {}
 
     ~GetLocation() override = default;
 
     void execute() override;
 
 private:
-    std::size_t camId;
+    size_t camId;
     std::shared_ptr<float3> &cords;
 };
-
-//class CountCameras : public CameraCommand {
-//public:
-//    CountCameras() = delete;
-//
-//    explicit CountCameras(std::shared_ptr<std::size_t> &count);
-//
-//    ~CountCameras() override = default;
-//
-//    void execute() override;
-//
-//private:
-//    std::shared_ptr<std::size_t> &count;
-//};
+;
 
 
 

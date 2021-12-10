@@ -27,7 +27,11 @@ public:
     explicit Light(const std::shared_ptr<std::ifstream>& srcFile);
 
 
-    [[nodiscard]] const float3& getPosition() {
+    void setPos(const float3& value) { this->_position = value; }
+
+    void setIntensity(float value) { this->_intensity = value; }
+
+    [[nodiscard]] const float3& getPos() {
         return this->_position;
     }
 
