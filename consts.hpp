@@ -8,8 +8,9 @@
 const int WIDTH = 1327;
 const int HEIGHT = 968;
 
-//const int WIDTH = 10;
-//const int HEIGHT = 10;
+
+//const int WIDTH = 200;
+//const int HEIGHT = 200;
 
 const int WINWIDTH = 1650;
 const int WINHEIGHT = 980;

@@ -10,13 +10,20 @@
 #include <iostream>
 #include "raytracer.hpp"
 #include "../../consts.hpp"
+#include <omp.h>
+#include <QImage>
+#include <objects/model/trismodel.hpp>
+
 
 void RayTracer::cpuRender(const std::shared_ptr<Scene>& scene, const std::shared_ptr<Camera>& cam,
                           const std::shared_ptr<Drawer>& drawer) {
-#pragma omp parallel for num_threads(8)
+    uchar *img = drawer->getImage()->bits();
+//#pragma omp parallel for num_threads(8)
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
             auto c = RaysHandling::castRayCPU(cam->getRay(i, j), scene);
+
+//            std::cout << "[" << j << ", " << i << "]: " << c.x*255 << ' ' << c.y*255 << ' ' << c.z*255 << std::endl;
 
             float max = std::max(c[0], std::max(c[1], c[2]));
             if (max > 1) c *= (1.f / max);
@@ -27,9 +34,15 @@ void RayTracer::cpuRender(const std::shared_ptr<Scene>& scene, const std::shared
 
             c *= 255;
 
-            drawer->putPixel(int2{i, j}, c);
+//            drawer->putPixel(int2{i, j}, c);
+            int coord = (j*WIDTH+i)*4-4;
+
+            img[coord] = c[2];
+            img[coord+1] = c[1];
+            img[coord+2] = c[0];
         }
     }
+    std::cerr << "CPU raytracing is done!\n";
 }
 
 
@@ -105,6 +118,14 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
         std::cout << "enqueueReadBuffer ok" << std::endl;
     }
 
+    delete[] hFigures;
+    delete[] hLights;
+    delete[] hCamera;
+    delete[] hDim;
+    delete[] hFigSize;
+    delete[] hLightSize;
+    delete[] hSceneAmbientLight;
+    delete[] hRayTreeHeightMax;
 }
 
 RayTracer::RayTracer() {

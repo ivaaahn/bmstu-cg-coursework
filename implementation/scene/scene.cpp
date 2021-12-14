@@ -4,36 +4,10 @@
 
 #include "scene.hpp"
 
-#include <utility>
-//#include "objects/composite/composite.hpp"
 
-Scene::Scene() {}
+#define EPS 1e-5
 
-//void Scene::add(const std::shared_ptr<Object> &object) {
-//    this->obj->add(object);
-
-//    if (obj->is_visible())
-//        this->models_count++;
-//    else
-//        this->cameras_count++;
-//}
-
-//void Scene::remove(const CamIterator &it) {
-//    if((*it)->is_visible())
-//        this->models_count--;
-//    else
-//        this->cameras_count--;
-
-//    this->obj->remove(it);
-//}
-
-//size_t Scene::getCamerasCount() const {
-//    return this->cameras_count;
-//}
-//
-//size_t Scene::getModelsCount() const {
-//    return this->models_count;
-//}
+Scene::Scene() = default;
 
 CamIterator Scene::camBegin() {
     return this->_cameras.begin();
@@ -50,31 +24,6 @@ ModelIterator Scene::modelsBegin() {
 ModelIterator Scene::modelsEnd() {
     return this->_models.end();
 }
-//
-//CamIterator Scene::end() {
-//    return this->obj->end();
-//}
-//
-//void Scene::accept(std::shared_ptr<Visitor> visitor) {
-//    this->obj->accept(std::move(visitor));
-//}
-//
-//ConstIterator Scene::cbegin() const {
-//    return this->obj->cbegin();
-//}
-//
-//ConstIterator Scene::cend() const {
-//    return this->obj->cend();
-//}
-//
-//
-//ConstIterator Scene::begin() const {
-//    return this->obj->cbegin();
-//}
-//
-//ConstIterator Scene::end() const {
-//    return this->obj->cend();
-//}
 
 void Scene::addCamera(const std::shared_ptr<Camera>& cam) {
     this->_cameras.push_back(cam);
@@ -108,21 +57,45 @@ LightIterator Scene::lightsEnd() {
     return this->_lights.end();
 }
 
+#define PLANE_Y 4
+#define PLANE_X_BOUNDS 12
+#define PLANE_Z_MIN (-30)
+#define PLANE_Z_MAX 0
+
 bool Scene::isIntersect(const std::shared_ptr<Ray>& ray, float3& hit, float3& N, Material& material) {
-    float dist = std::numeric_limits<float>::max();
+    float figuresDist = std::numeric_limits<float>::max();
 
     float currDist;
     float3 currN, currHit;
 
+
     for (const auto& model: this->_models)
     {
-        if (model->rayIntersect(ray, currDist, currN, currHit) && currDist < dist)
+        if (model->rayIntersect(ray, currDist, currN, currHit) && currDist < figuresDist)
         {
-            dist = currDist;
+            figuresDist = currDist;
             hit = currHit;
             N = currN;
             material = model->getMaterial();
         }
     }
-    return dist < 1000; // TODO ?
+
+    float checkerboard_dist = std::numeric_limits<float>::max();
+    if (ray->dir.y > EPS || ray->dir.y < -EPS)
+    {
+        float d = -(ray->src.y + PLANE_Y) / ray->dir.y;     // the checkerboard plane has equation y = -1
+        float3 pt = ray->src + ray->dir * d;
+
+        if (d > EPS && fabs(pt.x) < PLANE_X_BOUNDS && pt.z < PLANE_Z_MAX && pt.z > PLANE_Z_MIN && d < figuresDist) {
+            checkerboard_dist = d;
+            hit = pt;
+            N = {0, 1, 0};
+            material.setDiffuseColor(((int)(0.5 * pt.x + 1000) + (int)(0.5 * pt.z)) & 1 ? float3{0.3, 0.3, 0.3} : float3{0.3, 0.2, 0.1});
+            material.setAlbedo({0.2,0.5,0.3,0.0});
+            material.setSpecularExp(2);
+            material.setRefIdx(1);
+        }
+    }
+
+    return std::min(figuresDist, checkerboard_dist) < 1000;
 }

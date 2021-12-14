@@ -3,12 +3,9 @@
 //
 
 #include <cmath>
-#include <iostream>
 #include "point.hpp"
+#include "math/linalg.hpp"
 
-inline double toRad(const double angle) {
-    return angle * (M_PI / 180);
-}
 
 Point::Point(double x, double y, double z) : x(x), y(y), z(z) {}
 

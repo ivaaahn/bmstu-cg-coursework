@@ -29,8 +29,7 @@ void QtDrawer::clearScene() {
 
 
 void QtDrawer::putPixel(const int2& coords, const ColorRGB& color) {
-    QColor color_((int)(color[0]), (int)(color[1]), (int)(color[2]));
-    this->painter->setPen(color_);
+    this->painter->setPen({(int)(color[0]), (int)(color[1]), (int)(color[2])});
     this->painter->drawPoint(coords.x, coords.y);
 }
 

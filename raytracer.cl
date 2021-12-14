@@ -501,11 +501,9 @@ kernel void Render(global uchar *pixels,
     float max_ = max(c.s0, max(c.s1, c.s2));
     if (max_ > 1) c *= (1.f / max_);
 
-    c[0] = max(0.f, min(1.f, c.s0));
-    c[1] = max(0.f, min(1.f, c.s1));
-    c[2] = max(0.f, min(1.f, c.s2));
-
-    c *= 255;
+    c[0] = max(0.f, min(1.f, c.s0)) * 255;
+    c[1] = max(0.f, min(1.f, c.s1)) * 255;
+    c[2] = max(0.f, min(1.f, c.s2)) * 255;
 
 /*
     0123 - 1
@@ -515,9 +513,11 @@ kernel void Render(global uchar *pixels,
 
     x * 3 
 */
-    pixels[gid*4-4] = c.s2;
-    pixels[gid*4-3] = c.s1;
-    pixels[gid*4-2] = c.s0;
+    int coords = gid*4-4;
+
+    pixels[coords] = c.s2;
+    pixels[coords+1] = c.s1;
+    pixels[coords+2] = c.s0;
 
 	// pixel[gid] = c;
 

@@ -245,7 +245,7 @@ void MainWindow::on_light_add_btn_clicked() {
 
 void MainWindow::on_cam_add_btn_clicked() {
     try {
-        this->facade->execute(std::make_shared<AddCamera>(float3{0., 0., 1.}));
+        this->facade->execute(std::make_shared<AddCamera>(float3{0., 0., 5.}));
         ui->cams_list->addItem(QString("Camera#") + QString::number(++this->last_cam_id));
     }
     catch (BaseException& ex) {

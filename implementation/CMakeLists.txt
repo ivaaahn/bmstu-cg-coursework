@@ -77,7 +77,7 @@ set(MATH
         math/rays.hpp
         math/rays_handling.cpp
         math/rays_handling.hpp
-        )
+        math/linalg.cpp)
 
 set (RAYTRACER
         raytracer/raytracer.cpp

@@ -424,6 +424,7 @@ public:
         cam_x_axis_angle_box->setAlignment(Qt::AlignCenter);
         cam_x_axis_angle_box->setReadOnly(true);
         cam_x_axis_angle_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
+        cam_x_axis_angle_box->setMaximum(360);
 
         horizontalLayout_17->addWidget(cam_x_axis_angle_box);
 
@@ -450,6 +451,7 @@ public:
         cam_y_axis_angle_box->setAlignment(Qt::AlignCenter);
         cam_y_axis_angle_box->setReadOnly(true);
         cam_y_axis_angle_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
+        cam_y_axis_angle_box->setMaximum(360);
 
         horizontalLayout_17->addWidget(cam_y_axis_angle_box);
 
@@ -2143,6 +2145,9 @@ public:
         cam_fov_box->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
         cam_fov_box->setAlignment(Qt::AlignCenter);
         cam_fov_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
+        cam_fov_box->setMinimum(30);
+        cam_fov_box->setMaximum(90);
+        cam_fov_box->setValue(60);
 
         horizontalLayout_6->addWidget(cam_fov_box);
 
@@ -2187,7 +2192,6 @@ public:
         cams_list->setMaximumSize(QSize(316, 80));
         cams_list->setFont(font9);
         cams_list->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
-        cams_list->setGridSize(QSize(1, 0));
         cams_list->setViewMode(QListView::ListMode);
         cams_list->setWordWrap(false);
         cams_list->setSelectionRectVisible(false);
@@ -2476,42 +2480,61 @@ public:
         horizontalLayout_19->setStretch(0, 5);
         horizontalLayout_19->setStretch(1, 1);
         MainWindow->setCentralWidget(centralwidget);
-        QWidget::setTabOrder(mod_load_btn, alb1_box);
-        QWidget::setTabOrder(alb1_box, alb0_box);
-        QWidget::setTabOrder(alb0_box, rotate_btn);
-        QWidget::setTabOrder(rotate_btn, scale_btn);
-        QWidget::setTabOrder(scale_btn, move_btn);
-        QWidget::setTabOrder(move_btn, mod_switch_btn);
-        QWidget::setTabOrder(mod_switch_btn, models_list);
-        QWidget::setTabOrder(models_list, color0_box);
-        QWidget::setTabOrder(color0_box, color2_box);
-        QWidget::setTabOrder(color2_box, lights_list);
-        QWidget::setTabOrder(lights_list, light_z_box);
-        QWidget::setTabOrder(light_z_box, light_y_box);
-        QWidget::setTabOrder(light_y_box, light_x_box);
-        QWidget::setTabOrder(light_x_box, light_apply_btn);
-        QWidget::setTabOrder(light_apply_btn, mat_apply_btn);
-        QWidget::setTabOrder(mat_apply_btn, alb3_box);
+        QWidget::setTabOrder(x_box, y_box);
+        QWidget::setTabOrder(y_box, z_box);
+        QWidget::setTabOrder(z_box, scale_btn);
+        QWidget::setTabOrder(scale_btn, rotate_btn);
+        QWidget::setTabOrder(rotate_btn, move_btn);
+        QWidget::setTabOrder(move_btn, models_list);
+        QWidget::setTabOrder(models_list, mod_load_btn);
+        QWidget::setTabOrder(mod_load_btn, mod_rm_btn);
+        QWidget::setTabOrder(mod_rm_btn, mod_switch_btn);
+        QWidget::setTabOrder(mod_switch_btn, color0_box);
+        QWidget::setTabOrder(color0_box, color1_box);
+        QWidget::setTabOrder(color1_box, color2_box);
+        QWidget::setTabOrder(color2_box, alb0_box);
+        QWidget::setTabOrder(alb0_box, alb1_box);
+        QWidget::setTabOrder(alb1_box, alb2_box);
+        QWidget::setTabOrder(alb2_box, alb3_box);
         QWidget::setTabOrder(alb3_box, spec_exp_box);
-        QWidget::setTabOrder(spec_exp_box, cam_move_right_btn);
-        QWidget::setTabOrder(cam_move_right_btn, cam_move_up_btn);
-        QWidget::setTabOrder(cam_move_up_btn, cam_move_down_btn);
-        QWidget::setTabOrder(cam_move_down_btn, rtree_h_box);
-        QWidget::setTabOrder(rtree_h_box, scene_ambient_box);
-        QWidget::setTabOrder(scene_ambient_box, mat_load_btn);
-        QWidget::setTabOrder(mat_load_btn, cam_turn_right_btn);
-        QWidget::setTabOrder(cam_turn_right_btn, cam_x_box);
+        QWidget::setTabOrder(spec_exp_box, refr_idx_box);
+        QWidget::setTabOrder(refr_idx_box, mat_apply_btn);
+        QWidget::setTabOrder(mat_apply_btn, mat_load_btn);
+        QWidget::setTabOrder(mat_load_btn, scene_ambient_box);
+        QWidget::setTabOrder(scene_ambient_box, rtree_h_box);
+        QWidget::setTabOrder(rtree_h_box, rtree_h_apply_btn);
+        QWidget::setTabOrder(rtree_h_apply_btn, light_x_box);
+        QWidget::setTabOrder(light_x_box, light_y_box);
+        QWidget::setTabOrder(light_y_box, light_z_box);
+        QWidget::setTabOrder(light_z_box, light_intensity_box);
+        QWidget::setTabOrder(light_intensity_box, lights_list);
+        QWidget::setTabOrder(lights_list, light_add_btn);
+        QWidget::setTabOrder(light_add_btn, light_load_btn);
+        QWidget::setTabOrder(light_load_btn, light_rm_btn);
+        QWidget::setTabOrder(light_rm_btn, light_switch_btn);
+        QWidget::setTabOrder(light_switch_btn, light_apply_btn);
+        QWidget::setTabOrder(light_apply_btn, cam_fov_box);
+        QWidget::setTabOrder(cam_fov_box, cams_list);
+        QWidget::setTabOrder(cams_list, cam_add_btn);
+        QWidget::setTabOrder(cam_add_btn, cam_switch_btn);
+        QWidget::setTabOrder(cam_switch_btn, cam_apply_btn);
+        QWidget::setTabOrder(cam_apply_btn, cam_rm_btn);
+        QWidget::setTabOrder(cam_rm_btn, graphicsView);
+        QWidget::setTabOrder(graphicsView, cam_move_left_btn);
+        QWidget::setTabOrder(cam_move_left_btn, cam_turn_left_btn);
+        QWidget::setTabOrder(cam_turn_left_btn, cam_move_up_btn);
+        QWidget::setTabOrder(cam_move_up_btn, cam_turn_up_btn);
+        QWidget::setTabOrder(cam_turn_up_btn, cam_zoom_in_btn);
+        QWidget::setTabOrder(cam_zoom_in_btn, cam_x_box);
         QWidget::setTabOrder(cam_x_box, cam_y_box);
         QWidget::setTabOrder(cam_y_box, cam_z_box);
-        QWidget::setTabOrder(cam_z_box, light_intensity_box);
-        QWidget::setTabOrder(light_intensity_box, light_load_btn);
-        QWidget::setTabOrder(light_load_btn, light_add_btn);
-        QWidget::setTabOrder(light_add_btn, cam_add_btn);
-        QWidget::setTabOrder(cam_add_btn, light_rm_btn);
-        QWidget::setTabOrder(light_rm_btn, cam_turn_up_btn);
-        QWidget::setTabOrder(cam_turn_up_btn, cam_turn_down_btn);
-        QWidget::setTabOrder(cam_turn_down_btn, alb2_box);
-        QWidget::setTabOrder(alb2_box, light_switch_btn);
+        QWidget::setTabOrder(cam_z_box, cam_x_axis_angle_box);
+        QWidget::setTabOrder(cam_x_axis_angle_box, cam_y_axis_angle_box);
+        QWidget::setTabOrder(cam_y_axis_angle_box, cam_zoom_out_btn);
+        QWidget::setTabOrder(cam_zoom_out_btn, cam_turn_down_btn);
+        QWidget::setTabOrder(cam_turn_down_btn, cam_move_down_btn);
+        QWidget::setTabOrder(cam_move_down_btn, cam_turn_right_btn);
+        QWidget::setTabOrder(cam_turn_right_btn, cam_move_right_btn);
 
         retranslateUi(MainWindow);
 

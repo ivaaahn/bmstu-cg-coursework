@@ -947,6 +947,9 @@
             <property name="buttonSymbols">
              <enum>QAbstractSpinBox::NoButtons</enum>
             </property>
+            <property name="maximum">
+             <number>360</number>
+            </property>
            </widget>
           </item>
           <item>
@@ -1025,6 +1028,9 @@
             </property>
             <property name="buttonSymbols">
              <enum>QAbstractSpinBox::NoButtons</enum>
+            </property>
+            <property name="maximum">
+             <number>360</number>
             </property>
            </widget>
           </item>
@@ -9586,6 +9592,15 @@
             <property name="buttonSymbols">
              <enum>QAbstractSpinBox::NoButtons</enum>
             </property>
+            <property name="minimum">
+             <number>30</number>
+            </property>
+            <property name="maximum">
+             <number>90</number>
+            </property>
+            <property name="value">
+             <number>60</number>
+            </property>
            </widget>
           </item>
          </layout>
@@ -9687,12 +9702,6 @@
           </property>
           <property name="locale">
            <locale language="Russian" country="Russia"/>
-          </property>
-          <property name="gridSize">
-           <size>
-            <width>1</width>
-            <height>0</height>
-           </size>
           </property>
           <property name="viewMode">
            <enum>QListView::ListMode</enum>
@@ -11624,43 +11633,62 @@
   </widget>
  </widget>
  <tabstops>
-  <tabstop>mod_load_btn</tabstop>
-  <tabstop>alb1_box</tabstop>
-  <tabstop>alb0_box</tabstop>
-  <tabstop>rotate_btn</tabstop>
+  <tabstop>x_box</tabstop>
+  <tabstop>y_box</tabstop>
+  <tabstop>z_box</tabstop>
   <tabstop>scale_btn</tabstop>
+  <tabstop>rotate_btn</tabstop>
   <tabstop>move_btn</tabstop>
-  <tabstop>mod_switch_btn</tabstop>
   <tabstop>models_list</tabstop>
+  <tabstop>mod_load_btn</tabstop>
+  <tabstop>mod_rm_btn</tabstop>
+  <tabstop>mod_switch_btn</tabstop>
   <tabstop>color0_box</tabstop>
+  <tabstop>color1_box</tabstop>
   <tabstop>color2_box</tabstop>
-  <tabstop>lights_list</tabstop>
-  <tabstop>light_z_box</tabstop>
-  <tabstop>light_y_box</tabstop>
-  <tabstop>light_x_box</tabstop>
-  <tabstop>light_apply_btn</tabstop>
-  <tabstop>mat_apply_btn</tabstop>
+  <tabstop>alb0_box</tabstop>
+  <tabstop>alb1_box</tabstop>
+  <tabstop>alb2_box</tabstop>
   <tabstop>alb3_box</tabstop>
   <tabstop>spec_exp_box</tabstop>
-  <tabstop>cam_move_right_btn</tabstop>
-  <tabstop>cam_move_up_btn</tabstop>
-  <tabstop>cam_move_down_btn</tabstop>
-  <tabstop>rtree_h_box</tabstop>
-  <tabstop>scene_ambient_box</tabstop>
+  <tabstop>refr_idx_box</tabstop>
+  <tabstop>mat_apply_btn</tabstop>
   <tabstop>mat_load_btn</tabstop>
-  <tabstop>cam_turn_right_btn</tabstop>
+  <tabstop>scene_ambient_box</tabstop>
+  <tabstop>rtree_h_box</tabstop>
+  <tabstop>rtree_h_apply_btn</tabstop>
+  <tabstop>light_x_box</tabstop>
+  <tabstop>light_y_box</tabstop>
+  <tabstop>light_z_box</tabstop>
+  <tabstop>light_intensity_box</tabstop>
+  <tabstop>lights_list</tabstop>
+  <tabstop>light_add_btn</tabstop>
+  <tabstop>light_load_btn</tabstop>
+  <tabstop>light_rm_btn</tabstop>
+  <tabstop>light_switch_btn</tabstop>
+  <tabstop>light_apply_btn</tabstop>
+  <tabstop>cam_fov_box</tabstop>
+  <tabstop>cams_list</tabstop>
+  <tabstop>cam_add_btn</tabstop>
+  <tabstop>cam_switch_btn</tabstop>
+  <tabstop>cam_apply_btn</tabstop>
+  <tabstop>cam_rm_btn</tabstop>
+  <tabstop>graphicsView</tabstop>
+  <tabstop>cam_move_left_btn</tabstop>
+  <tabstop>cam_turn_left_btn</tabstop>
+  <tabstop>cam_move_up_btn</tabstop>
+  <tabstop>cam_turn_up_btn</tabstop>
+  <tabstop>cam_zoom_in_btn</tabstop>
   <tabstop>cam_x_box</tabstop>
   <tabstop>cam_y_box</tabstop>
   <tabstop>cam_z_box</tabstop>
-  <tabstop>light_intensity_box</tabstop>
-  <tabstop>light_load_btn</tabstop>
-  <tabstop>light_add_btn</tabstop>
-  <tabstop>cam_add_btn</tabstop>
-  <tabstop>light_rm_btn</tabstop>
-  <tabstop>cam_turn_up_btn</tabstop>
+  <tabstop>cam_x_axis_angle_box</tabstop>
+  <tabstop>cam_y_axis_angle_box</tabstop>
+  <tabstop>cam_zoom_out_btn</tabstop>
   <tabstop>cam_turn_down_btn</tabstop>
-  <tabstop>alb2_box</tabstop>
-  <tabstop>light_switch_btn</tabstop>
+  <tabstop>cam_move_down_btn</tabstop>
+  <tabstop>cam_turn_right_btn</tabstop>
+  <tabstop>cam_move_right_btn</tabstop>
  </tabstops>
  <resources/>
  <connections/>

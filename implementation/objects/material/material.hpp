@@ -41,10 +41,14 @@ public:
     Material(float ref_idx, const float4& albedo, const float3& color, float spec) :
             _refIdx(ref_idx), _albedo(albedo), _diffuseColor(color), _specularExp(spec) {}
 
+    void setAlbedo(float4 value) { this->_albedo = value; }
+    void setDiffuseColor(float3 value) { this->_diffuseColor = value; }
+    void setSpecularExp(float value) { this->_specularExp = value; }
+    void setRefIdx(float value) { this->_refIdx = value; }
 
     explicit Material(const std::shared_ptr<std::ifstream>& srcFile);
 
-    [[nodiscard]] const float4& getAlbedo() const{
+    [[nodiscard]] const float4& getAlbedo() const {
         return this->_albedo;
     }
 

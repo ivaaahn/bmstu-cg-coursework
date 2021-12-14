@@ -21,7 +21,8 @@ public:
                           size_t depth = 0);
 
 private:
-    static float3 getReflectionVector(const float3 &I, const float3 &N);
+    static float3 getReflectionVec(const float3 &I, const float3 &N);
+    static float3 getRefractionVec(const float3 &I, const float3 &N, float eta_t, float eta_i=1.f);
 };
 
 

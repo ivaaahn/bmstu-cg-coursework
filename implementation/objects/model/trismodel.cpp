@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "../../../consts.hpp"
+#include "math/linalg.hpp"
 
 
 #define EPS 1e-5
@@ -280,10 +282,6 @@ raw_figure TriangularModel::clFormat() const {
     return res;
 }
 
-inline double toRad(const float angle) {
-    return angle * (M_PI / 180);
-}
-
 
 void TriangularModel::_rotX(float3& p, float angle) {
     auto _cos = (float)cos(toRad(angle));
@@ -295,6 +293,7 @@ void TriangularModel::_rotX(float3& p, float angle) {
 }
 
 void TriangularModel::_rotY(float3& p, float angle) {
+
     auto _cos = (float)cos(toRad(angle));
     auto _sin = (float)sin(toRad(angle));
     auto _x = p.x;
@@ -376,21 +375,24 @@ void TriangularModel::_rotZ(float3& p, float angle) {
 void TriangularModel::rotate(const float3& value) {
     auto center = this->getCenter();
 
+    std::cout << value.x << ' ' << value.y << ' ' << value.z << std::endl;
+
     auto p_min = float3{1.} * std::numeric_limits<float>::max();
     auto p_max = float3{1.} * std::numeric_limits<float>::min();
 
 
-#pragma omp parallel for num_threads(16)
-    for (int i = 0; i < this->_points.size(); ++i) {
-        this->_points[i] -= center;
-        this->_rotX(this->_points[i], value.x);
-        this->_rotY(this->_points[i], value.y);
-        this->_rotZ(this->_points[i], value.z);
-        this->_points[i] += center;
+//#pragma omp parallel for num_threads(16)
+
+    for (auto & point : this->_points) {
+        point -= center;
+        this->_rotX(point, value.x);
+        this->_rotY(point, value.y);
+        this->_rotZ(point, value.z);
+        point += center;
 
         for (int k = 0; k < 3; ++k) {
-            p_min[k] = std::min(p_min[k], this->_points[i][k]);
-            p_max[k] = std::max(p_max[k], this->_points[i][k]);
+            p_min[k] = std::min(p_min[k], point[k]);
+            p_max[k] = std::max(p_max[k], point[k]);
         }
     }
 
@@ -404,13 +406,13 @@ void TriangularModel::translate(const float3& value) {
     auto p_min = float3{1.} * std::numeric_limits<float>::max();
     auto p_max = float3{1.} * std::numeric_limits<float>::min();
 
-#pragma omp parallel for num_threads(16)
-    for (int i = 0; i < this->_points.size(); ++i) {
-        this->_points[i] += value;
+//#pragma omp parallel for num_threads(16)
+    for (auto & _point : this->_points) {
+        _point += value;
 
         for (int k = 0; k < 3; ++k) {
-            p_min[k] = std::min(p_min[k], this->_points[i][k]);
-            p_max[k] = std::max(p_max[k], this->_points[i][k]);
+            p_min[k] = std::min(p_min[k], _point[k]);
+            p_max[k] = std::max(p_max[k], _point[k]);
         }
     }
 
@@ -424,19 +426,19 @@ void TriangularModel::scale(const float3& value) {
     auto p_min = float3{1.} * std::numeric_limits<float>::max();
     auto p_max = float3{1.} * std::numeric_limits<float>::min();
 
-#pragma omp parallel for num_threads(16)
-    for (int i = 0; i < this->_points.size(); ++i) {
-        this->_points[i] -= center;
+//#pragma omp parallel for num_threads(16)
+    for (auto & _point : this->_points) {
+        _point -= center;
 
-        this->_points[i].x *= value.x;
-        this->_points[i].y *= value.y;
-        this->_points[i].z *= value.z;
+        _point.x *= value.x;
+        _point.y *= value.y;
+        _point.z *= value.z;
 
-        this->_points[i] += center;
+        _point += center;
 
         for (int k = 0; k < 3; ++k) {
-            p_min[k] = std::min(p_min[k], this->_points[i][k]);
-            p_max[k] = std::max(p_max[k], this->_points[i][k]);
+            p_min[k] = std::min(p_min[k], _point[k]);
+            p_max[k] = std::max(p_max[k], _point[k]);
         }
     }
 
