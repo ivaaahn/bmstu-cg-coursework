@@ -10,17 +10,6 @@
 #include <iostream>
 #include "raytracer.hpp"
 #include "../../consts.hpp"
-#include <omp.h>
-#include <QImage>
-#include <objects/model/trismodel.hpp>
-//#include <boost/compute/system.hpp>
-//#include <boost/compute/image/image2d.hpp>
-//#include <boost/compute/interop/qt.hpp>
-//#include <boost/compute/utility/dim.hpp>
-//#include <boost/compute/utility/source.hpp>
-//namespace compute = boost::compute;
-
-//using std::cin, std::cout;
 
 void RayTracer::cpuRender(const std::shared_ptr<Scene>& scene, const std::shared_ptr<Camera>& cam,
                           const std::shared_ptr<Drawer>& drawer) {

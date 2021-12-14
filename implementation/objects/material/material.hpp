@@ -34,8 +34,6 @@ private:
 
     void _readRefIdx(const std::shared_ptr<std::ifstream>& srcFile);
 
-    void _readAmbient(const std::shared_ptr<std::ifstream>& srcFile);
-
 public:
 
     Material() = default;

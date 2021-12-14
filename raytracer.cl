@@ -263,7 +263,7 @@ float3 getTriangleNormal(global const RawFigure *fig, const int3 face, const Ray
 
 
 bool rayTriangleModelIntersect(global const RawFigure *fig, const Ray *ray, float *distTo1stIntersect, float3 *N, float3 *hit) {
-    // if (fig->fig_type == POLYGONAL && !rayBoxIntersect(fig, ray)) return false;
+    // if (!rayBoxIntersect(fig, ray)) return false;
 
     float faceDist = MAXFLOAT;
     float currDist;
@@ -363,16 +363,16 @@ float3 _getColor(global const RawFigure *fList, int flLen, global const Light *l
 
         // checking if the point lies in the shadow of the light
         float3 shadowSrc = dot(lightDir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
-        float3 shadowHit, shadowN;
 
         float curr_dli = light->intensity * max(0.f, dot(lightDir, N));
         float curr_sli = pown(max(0.f, dot(-reflect(-lightDir, N), ray->dir)), m->specularExp) * light->intensity;
 
-        Ray tmp_ray;
-        tmp_ray.src = shadowSrc;
-        tmp_ray.dir = lightDir;
+        Ray shadowRay;
+        RayInit(&shadowRay, shadowSrc, lightDir);
+
         Material shadowMaterial;
-        if (sceneIsIntersect(fList, flLen, &tmp_ray, &shadowHit, &shadowN, &shadowMaterial) && dist2(shadowHit, shadowSrc) < lightDist) {
+        float3 shadowHit, shadowN;
+        if (sceneIsIntersect(fList, flLen, &shadowRay, &shadowHit, &shadowN, &shadowMaterial) && dist2(shadowHit, shadowSrc) < lightDist) {
             curr_dli *= shadowMaterial.albedo[3];
             curr_sli *= shadowMaterial.albedo[3];
         }
@@ -383,7 +383,7 @@ float3 _getColor(global const RawFigure *fList, int flLen, global const Light *l
 
     float4 alb = m->albedo;
     
-    return (float3)(sceneAmbientLight, sceneAmbientLight, sceneAmbientLight)* alb[0] + m->diffuse*DLI*alb[1] + (float3)(1., 1., 1.)*SLI*alb[2] + reflect_cf*alb[2] + refract_cf*alb[3];
+    return (float3)(sceneAmbientLight, sceneAmbientLight, sceneAmbientLight)*alb[0] + m->diffuse*DLI*alb[1] + (float3)(1., 1., 1.)*SLI*alb[2] + reflect_cf*alb[2] + refract_cf*alb[3];
 }
 
 
@@ -430,11 +430,11 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
             stack[++top] = d;
 
             // get left child
-            d.ray.dir = normalize(reflect(d.ray.dir, d.N));         
-            d.ray.src = dot(d.ray.dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
+            float3 new_src =  dot(d.ray.dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
+            float3 new_dir = normalize(reflect(d.ray.dir, d.N));
+            RayInit(&d.ray, new_src, new_dir);
             d.idx = id++;
-
-           
+          
             d.hits = (stack[top].depth >= rayTreeHeightMax) ? false : sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
         }
 
@@ -451,8 +451,9 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
             curr_color = (float3)(COLOR_R/255., COLOR_G/255., COLOR_B/255.) * sceneAmbientLight;
 
             // get right child
-            d.ray.dir = normalize(refract(d.ray.dir, d.N, d.m.refIdx, 1.f));         
-            d.ray.src = dot(d.ray.dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
+            float3 new_src = dot(d.ray.dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
+            float3 new_dir = normalize(refract(d.ray.dir, d.N, d.m.refIdx, 1.f));
+            RayInit(&d.ray, new_src, new_dir);
             d.idx = id++;
 
             d.hits = (stack[top].depth >= rayTreeHeightMax) ? false : sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
