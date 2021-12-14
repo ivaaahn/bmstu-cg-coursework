@@ -119,28 +119,7 @@ void getRay(Ray *ray, int w, int h, int2 dim, global const Camera *cam) {
     if (cam->angles.x) rotateX(&p, cam->angles.x);
     if (cam->angles.y) rotateY(&p, cam->angles.y);
 
-    // float dir_x = (w + 0.5) - dim.s0 / 2.;
-    // float dir_y = -((h + 0.5) - dim.s1 / 2.);
-    // float dir_z = -(dim.s1 / 2.) / tan(cam->fov / 2.));
-
     RayInit(ray, cam->position, normalize(p));
-
-    // float x = (2 * (w + 0.5) / (float)dim.s0 - 1) * tan(cam->fov / 2.) * dim.s0 / (float)dim.s1;
-    // float y = -(2 * (h + 0.5) / (float)dim.s1 - 1) * tan(cam->fov / 2.);
-    
-
-    // ray->src = cam->position;
-    // ray->dir = normalize((float3)(x, y, z)); 
-    
-    // ray->invdir = 1 / ray->dir;
-
-    // printf("%f %f %f\n", ray->invdir.x, ray->invdir.y, ray->invdir.z);
-
-    // ray->sign.x = (ray->invdir.x < 0);
-    // ray->sign.y = (ray->invdir.y < 0);
-    // ray->sign.z = (ray->invdir.z < 0);
-
-    // printf("%d %d %d\n", ray->sign.x, ray->sign.y, ray->sign.z);
 }
 
 float length2(float3 v) {
@@ -216,25 +195,25 @@ bool rayBoxIntersect(global const RawFigure *fig, const Ray *r) {
 
 
 bool rayTriangleFaceIntersect(global const RawFigure *fig, const Ray *ray, const int3 face, float *ray_tvalue) {
-//  find vectors for two edges sharing vertex[0]
+    //  find vectors for two edges sharing vertex[0]
     float3 edge1 = fig->points[face.s1] - fig->points[face.s0];
     float3 edge2 = fig->points[face.s2] - fig->points[face.s0];
 
-//   begin calc determinant - also used to calc U par`ameter
+    //   begin calc determinant - also used to calc U par`ameter
     float3 pvec = cross(ray->dir, edge2);
     float det = dot(edge1, pvec);
 
-//   ray lies in plane of triangle
+    //   ray lies in plane of triangle
     if (det < EPS) return false;
 
-//   calc dist from vertex[0] to ray source
+    //   calc dist from vertex[0] to ray source
     float3 tvec = ray->src - fig->points[face.s0];
 
-//  calculate bary_u parameter and test bounds
+    //  calculate bary_u parameter and test bounds
     float bary_u = dot(tvec, pvec);
     if (bary_u < 0.0 || bary_u > det) return false;
 
-//  bary_v (barycenter)
+    //  bary_v (barycenter)
     float3 qvec = cross(tvec, edge1);
     float bary_v = dot(ray->dir, qvec);
 
@@ -318,24 +297,6 @@ bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray 
             *N = currN;
             *mat = fList[i].material;
         }
-
-        // if ((fList[i].fig_type == POLYGONAL) && rayTriangleModelIntersect(&fList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
-        // {
-        //     figuresDist = currDist;
-        //     *hit = currHit;
-        //     *N = currN;
-        //     *mat = fList[i].material;
-
-        //     continue;
-        // }
-
-        // if (sphereIsIntersect(&fList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
-        // {
-        //     figuresDist = currDist;
-        //     *hit = currHit;
-        //     *N = currN;
-        //     *mat = fList[i].material;
-        // }
     }
 
     float checkerboard_dist = MAXFLOAT;
@@ -355,7 +316,6 @@ bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray 
             mat->albedo = (float4)(0.2,0.5,0.3,0.0);
             mat->specularExp = 2;
             mat->refIdx=1;
-            // printf("mat->diffuse: (%f, %f, %f)", mat->diffuse.x, mat->diffuse.y, mat->diffuse.z);
         }
     }
 
@@ -487,63 +447,6 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
     // printf("(%d, %d) end...\n", i, j);
     return curr_color;
 }
-// float3 _getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, const Material *m, float3 hit, const Ray *ray, float3 N, float3 reflect_cf, float3 refract_cf) {
-// 
-
-// float3 RaysHandling::castRay(float3 src, float3 dir, const std::shared_ptr<Scene>& scene, size_t depth) {
-//     auto summary12 = float3{0.0};
-//     float palb2 = 1.;
-
-//     while (true) {
-
-// //        depth--;
-
-//         float3 hit, N;
-//         Material mat;
-
-//         if (depth > 3 || !scene->isIntersect(src, dir, hit, N, mat)) break;
-
-//         float DLI = 0, SLI = 0; // diffuse light intensity, specular light intensity
-//         for (auto& light: scene->_lights) {
-//             float3 light_dir = normalize((light->getPosition() - hit));
-//             float light_distance = linalg::dist2(light->getPosition(), hit);
-
-//             // checking if the point lies in the shadow of the light
-//             float3 shadow_src = dot(light_dir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
-//             float3 shadow_hit, shadow_N;
-//             Material tmp_material;
-//             if (scene->isIntersect(shadow_src, light_dir, shadow_hit, shadow_N, tmp_material) &&
-//                 dist2(shadow_hit, shadow_src) < light_distance)
-//                 continue;
-
-//             DLI += light->getIntensity() * std::max(0.f, dot(light_dir, N));
-
-//             auto reflectVec = RaysHandling::reflect(-light_dir, N);
-
-//             SLI += powf(std::max(0.f, linalg::dot(-reflectVec, dir)), mat.getSpecularExp()) *
-//                    light->getIntensity();
-//         }
-
-//         auto alb = mat.getAlbedo();
-
-
-//         summary12 += palb2 * (mat.getDiffuse() * DLI * alb[0] + float3(1.) * SLI * alb[1]);
-//         palb2 *= alb[2];
-
-
-
-
-//         // offset the original point to avoid occlusion by the object itself
-//         dir = normalize(RaysHandling::reflect(dir, N));
-//         src = dot(dir, N) < 0 ? (hit - N * (float)1e-3) : (hit + N * (float)1e-3);
-
-//         depth++;
-// //        return mat.getDiffuse() * DLI * alb[0]
-// //               + float3(1.) * SLI * alb[1]
-// //               + alb[2] * RaysHandling::castRay(reflectSrc, reflect_dir, scene, depth + 1);;
-//     }
-
-//     return summary12 + palb2*float3{0.2, 0.7, 0.8}; // background color
 
 
 kernel void Render(global uchar *pixels,
