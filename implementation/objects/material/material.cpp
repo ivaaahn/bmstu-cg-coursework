@@ -11,7 +11,6 @@ Material::Material(const std::shared_ptr<std::ifstream>& srcFile) {
     this->_readDiffuseColor(srcFile);
     this->_readSpecularExp(srcFile);
     this->_readRefIdx(srcFile);
-    this->_readAmbient(srcFile);
 }
 
 void Material::_readAlbedo(const std::shared_ptr<std::ifstream>& srcFile) {
@@ -48,14 +47,5 @@ void Material::_readRefIdx(const std::shared_ptr<std::ifstream>& srcFile) {
         throw FileFormatError(__FILE__, __LINE__, "invalid model-file format");
 
     this->_refIdx = tempRefIdx;
-}
-
-void Material::_readAmbient(const std::shared_ptr<std::ifstream>& srcFile) {
-    float tempAmbient = 0.f;
-
-    if (!(*srcFile >> tempAmbient))
-        throw FileFormatError(__FILE__, __LINE__, "invalid model-file format");
-
-    this->_ambient = tempAmbient;
 }
 

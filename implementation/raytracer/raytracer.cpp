@@ -51,7 +51,7 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
 
     auto *hFigures = new raw_figure[scene->_models.size()];
     auto *hLights = new raw_light[scene->_lights.size()];
-    auto *hCameras = new cl_float4[1];                  // Camera
+    auto *hCamera = new raw_camera[1];                  // Camera
     auto *hDim = new cl_int2[1];                        // Dimensions
     auto *hFigSize = new cl_int[1];                     // Figures List's Size
     auto *hLightSize = new cl_int[1];                   // Lights List's Size
@@ -71,7 +71,7 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
         hLights[i] = scene->_lights[i]->clFormat();
 
 
-    hCameras[0] = cam->clFormat();     // Gathering cameras
+    hCamera[0] = cam->clFormat();     // Gathering cameras
     hDim[0] = {WIDTH, HEIGHT};
     hFigSize[0] = int(scene->_models.size());
     hLightSize[0] = int(scene->_lights.size());
@@ -84,8 +84,8 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
                         scene->_models.size() * sizeof(raw_figure), hFigures);
     cl::Buffer bLights(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR,
                        scene->_lights.size() * sizeof(raw_light), hLights);
-    cl::Buffer bCameras(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR,
-                        1 * sizeof(cl_float4), hCameras);
+    cl::Buffer bCamera(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR,
+                        1 * sizeof(raw_camera), hCamera);
     cl::Buffer bDim(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, 1 * sizeof(cl_int2),
                     hDim);
     cl::Buffer bFigSize(this->ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_USE_HOST_PTR, 1 * sizeof(cl_int),
@@ -101,7 +101,7 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
     kernel.setArg(0, bImg);
     kernel.setArg(1, bFigures);
     kernel.setArg(2, bLights);
-    kernel.setArg(3, bCameras);
+    kernel.setArg(3, bCamera);
     kernel.setArg(4, bDim);
     kernel.setArg(5, bFigSize);
     kernel.setArg(6, bLightSize);
@@ -110,9 +110,12 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
 
     cl::CommandQueue queue(this->ctx, this->device);
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(NUM_OF_ELEMENTS));
-    queue.enqueueReadBuffer(bImg, CL_TRUE, 0, hImgLen * sizeof(cl_uchar), hImg);
+    auto err = queue.enqueueReadBuffer(bImg, CL_TRUE, 0, hImgLen * sizeof(cl_uchar), hImg);
 
-    std::cout << "enqueueReadBuffer ok" << std::endl;
+    if (err == CL_SUCCESS) {
+        std::cout << "enqueueReadBuffer ok" << std::endl;
+    }
+
 }
 
 RayTracer::RayTracer() {

@@ -49,6 +49,15 @@ void MoveCamera::execute() {
 }
 
 
+void RotateCamera::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    auto it = sceneManager->getScene()->camBegin();
+    std::advance(it, this->camId);
+
+    (*it)->rotate(this->angles);
+}
+
+
 void RemoveCamera::execute() {
     auto scene = SceneManagerCreator().getManager()->getScene();
     auto it = scene->camBegin();
@@ -67,12 +76,24 @@ void SetCamera::execute() {
     sceneManager->setCurrentCamera(it);
 }
 
-void GetLocation::execute() {
+void GetCameraInfo::execute() {
     auto sceneManager = SceneManagerCreator().getManager();
     auto it = sceneManager->getScene()->camBegin();
 
     std::advance(it, this->camId);
 
-    *this->cords = (*it)->getPos();
+    *this->pos = (*it)->getPos();
+    *this->angles = (*it)->getAngles();
+    *this->fov = (*it)->getFov();
 }
+
+void SetCameraFov::execute() {
+    auto sceneManager = SceneManagerCreator().getManager();
+    auto it = sceneManager->getScene()->camBegin();
+
+    std::advance(it, this->camId);
+
+    (*it)->setFov(this->fov);
+}
+
 

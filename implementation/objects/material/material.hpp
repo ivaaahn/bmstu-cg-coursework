@@ -12,11 +12,10 @@
 using namespace linalg::aliases;
 
 typedef struct __attribute__ ((packed)) _raw_material {
-    cl_float4 albedo;           // ( Диффуз (Ламберт), Зерк. Отраж., Преломл.  )
+    cl_float4 albedo;           // ( Ka Kd Ks Kt  )
     cl_float3 diffuseColor;     // Диффузное освещение
     cl_float specularExp;       // Степень, аппроксимирующая пространственное распределение зеркально отраженного света
     cl_float refIdx;            // Показатель преломления среды (для з. Снеллиуса)
-    cl_float ambient;
 } raw_material;
 
 
@@ -26,7 +25,6 @@ private:
     float3 _diffuseColor;
     float _specularExp;
     float _refIdx; // Refractive index
-    float _ambient;
 
     void _readAlbedo(const std::shared_ptr<std::ifstream>& srcFile);
 
@@ -42,8 +40,8 @@ public:
 
     Material() = default;
 
-    Material(float ref_idx, const float4& albedo, const float3& color, float spec, float ambient) :
-            _refIdx(ref_idx), _albedo(albedo), _diffuseColor(color), _specularExp(spec), _ambient(ambient) {}
+    Material(float ref_idx, const float4& albedo, const float3& color, float spec) :
+            _refIdx(ref_idx), _albedo(albedo), _diffuseColor(color), _specularExp(spec) {}
 
 
     explicit Material(const std::shared_ptr<std::ifstream>& srcFile);
@@ -60,13 +58,10 @@ public:
         return this->_specularExp;
     }
 
-    [[nodiscard]] float getRefrIdx() const {
+    [[nodiscard]] float getRefIdx() const {
         return this->_refIdx;
     }
 
-    [[nodiscard]] float getAmbient() const {
-        return this->_ambient;
-    }
 
     [[nodiscard]] float getSpecularExp() const {
         return this->_specularExp;
@@ -78,7 +73,6 @@ public:
                 cl_float3{_diffuseColor.x, _diffuseColor.y, _diffuseColor.z},
                 cl_float{_specularExp},
                 cl_float{_refIdx},
-                cl_float{_ambient}
         };
     }
 };

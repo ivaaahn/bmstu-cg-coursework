@@ -28,9 +28,9 @@ typedef struct __attribute__ ((packed)) _cl_tag_Light {
 
 typedef struct __attribute__ ((packed)) _cl_tag_Camera {
     float3 position;
-	float fov;
+    int2 angles;
+	int fov;
 } Camera;
-
 
 
 typedef struct __attribute__ ((packed)) _cl_tag_Material {
@@ -38,7 +38,6 @@ typedef struct __attribute__ ((packed)) _cl_tag_Material {
 	float3 diffuse;
 	float specularExp;
 	float refIdx;
-    float ambient;
 } Material;
 
 #define NP 5000
@@ -86,13 +85,45 @@ void RayInit(Ray *ray, float3 src, float3 dir)
     ray->sign.z = (ray->invdir.z < 0);
 }
 
+float toRad(const float angle) {
+    return angle * (M_PI / 180);
+}
 
-void getRay(Ray *ray, int w, int h, int2 dim, Camera *cam) {
-    float dir_x = (w + 0.5) - dim.s0 / 2.;
-    float dir_y = -(h + 0.5) + dim.s1 / 2.;
-    float dir_z = -dim.s1 / (2. * tan(cam->fov / 2.));
+void rotateY(float3 *p, float angle) {
+    float cos_y = cos(toRad(angle));
+    float sin_y = sin(toRad(angle));
 
-    RayInit(ray, cam->position, normalize((float3)(dir_x, dir_y, dir_z)));
+    float tmp_x = p->x;
+
+    p->x = p->x * cos_y - p->z * sin_y;
+    p->z = p->z * cos_y + tmp_x * sin_y;
+}
+
+
+void rotateX(float3 *p, float angle) {
+    float cos_x = cos(toRad(angle));
+    float sin_x = sin(toRad(angle));
+    float tmp_y = p->y;
+
+    p->y = p->y * cos_x - p->z * sin_x;
+    p->z = p->z * cos_x + tmp_y * sin_x;
+}
+
+void getRay(Ray *ray, int w, int h, int2 dim, global const Camera *cam) {
+    float base_x = (w + 0.5) - dim.s0 / 2.;
+    float base_y =  -((h + 0.5) - dim.s1 / 2.);
+    float base_z = -dim.s1 / (2. * tan(toRad(cam->fov) / 2.));
+
+    float3 p = (float3)(base_x, base_y, base_z);
+
+    if (cam->angles.x) rotateX(&p, cam->angles.x);
+    if (cam->angles.y) rotateY(&p, cam->angles.y);
+
+    // float dir_x = (w + 0.5) - dim.s0 / 2.;
+    // float dir_y = -((h + 0.5) - dim.s1 / 2.);
+    // float dir_z = -(dim.s1 / 2.) / tan(cam->fov / 2.));
+
+    RayInit(ray, cam->position, normalize(p));
 
     // float x = (2 * (w + 0.5) / (float)dim.s0 - 1) * tan(cam->fov / 2.) * dim.s0 / (float)dim.s1;
     // float y = -(2 * (h + 0.5) / (float)dim.s1 - 1) * tan(cam->fov / 2.);
@@ -303,10 +334,9 @@ bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray 
             *hit = pt;
             *N = (float3)(0, 1, 0);
             mat->diffuse = ((int)(0.5 * pt.x + 1000) + (int)(0.5 * pt.z)) & 1 ? (float3)(0.3, 0.3, 0.3) : (float3)(0.3, 0.2, 0.1);
-            mat->albedo = (float4)(0.6,0.3,0.1,0.0);
+            mat->albedo = (float4)(0.2,0.5,0.3,0.0);
             mat->specularExp = 2;
             mat->refIdx=1;
-            mat->ambient=0.125;
             // printf("mat->diffuse: (%f, %f, %f)", mat->diffuse.x, mat->diffuse.y, mat->diffuse.z);
         }
     }
@@ -335,20 +365,25 @@ float3 _getColor(global const RawFigure *fList, int flLen, global const Light *l
         float3 shadowSrc = dot(lightDir, N) < 0 ? hit - N * (float)1e-3 : hit + N * (float)1e-3;
         float3 shadowHit, shadowN;
 
+        float curr_dli = light->intensity * max(0.f, dot(lightDir, N));
+        float curr_sli = pown(max(0.f, dot(-reflect(-lightDir, N), ray->dir)), m->specularExp) * light->intensity;
+
         Ray tmp_ray;
         tmp_ray.src = shadowSrc;
         tmp_ray.dir = lightDir;
-        Material tmpMaterial;
-        if (sceneIsIntersect(fList, flLen, &tmp_ray, &shadowHit, &shadowN, &tmpMaterial) && dist2(shadowHit, shadowSrc) < lightDist)
-            continue;
+        Material shadowMaterial;
+        if (sceneIsIntersect(fList, flLen, &tmp_ray, &shadowHit, &shadowN, &shadowMaterial) && dist2(shadowHit, shadowSrc) < lightDist) {
+            curr_dli *= shadowMaterial.albedo[3];
+            curr_sli *= shadowMaterial.albedo[3];
+        }
 
-        DLI += light->intensity * max(0.f, dot(lightDir, N));
-        SLI +=  pown(max(0.f, dot(-reflect(-lightDir, N), ray->dir)), m->specularExp) * light->intensity;
+        DLI += curr_dli;
+        SLI += curr_sli;
     }
 
     float4 alb = m->albedo;
     
-    return m->diffuse*DLI*alb[0] + (float3)(1., 1., 1.)*SLI*alb[1] + reflect_cf*alb[2] + refract_cf*alb[3] + (float3)(sceneAmbientLight, sceneAmbientLight, sceneAmbientLight)*m->ambient;
+    return (float3)(sceneAmbientLight, sceneAmbientLight, sceneAmbientLight)* alb[0] + m->diffuse*DLI*alb[1] + (float3)(1., 1., 1.)*SLI*alb[2] + reflect_cf*alb[2] + refract_cf*alb[3];
 }
 
 
@@ -366,8 +401,9 @@ typedef struct _ray_hit_data {
 #define STACK_LEN 16
 #define STACK_MAX STACK_LEN - 1
 
-// #define CONSTRAINT 1
-
+#define COLOR_R 60.
+#define COLOR_G 41.
+#define COLOR_B 105.
 
 float3 getColor(global const RawFigure *fList, int flLen, global const Light *lList, int llLen, Ray *ray, float sceneAmbientLight, int rayTreeHeightMax) {
     RayHitData stack[STACK_LEN] = {};
@@ -381,7 +417,7 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
     d.ray = *ray;
     d.hits = sceneIsIntersect(fList, flLen, &d.ray, &d.hit, &d.N, &d.m);
 
-    float3 curr_color = (float3)(21./255., 6./255., 44./255.) * sceneAmbientLight;
+    float3 curr_color = (float3)(COLOR_R/255., COLOR_G/255., COLOR_B/255.) * sceneAmbientLight;
 
     while (true) 
     {
@@ -412,7 +448,7 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
             // printf("(%d, %d): if... stacktop == %d, id == %d, depth == %d\n", i, j, top, d.idx, d.depth);
 
             stack[top].reflect_cf = curr_color;
-            curr_color = (float3)(21./255., 6./255., 44./255.) * sceneAmbientLight;
+            curr_color = (float3)(COLOR_R/255., COLOR_G/255., COLOR_B/255.) * sceneAmbientLight;
 
             // get right child
             d.ray.dir = normalize(refract(d.ray.dir, d.N, d.m.refIdx, 1.f));         
@@ -494,15 +530,14 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
 kernel void Render(global uchar *pixels,
                    global const RawFigure *figList,
                    global const Light *lightList,
-                   global const float4 *cam,
+                   global const Camera *cam,
                    global const int2 *dims,
                    global const int *flLen,
                    global const int *llLen,
                    global const float *sceneAmbientLightArr,
                    global const int *rayTreeHeightArr) {
 
-    // printf("Render() start...\n");
-    
+
     int gid = get_global_id(0); // Current ray in image
 	int2 dim = dims[0]; // Image Dimensions
 	int figListLen = flLen[0]; // objects in list
@@ -520,10 +555,8 @@ kernel void Render(global uchar *pixels,
 
     // printf("(%d, %d)\n", i, j);
 
-	Camera camera = { (float3)(cam[0].s0, cam[0].s1, cam[0].s2), cam[0].s3 };
-
     Ray ray;
-    getRay(&ray, i, j, dim, &camera);
+    getRay(&ray, i, j, dim, cam);
 
     // printf("Material: (%f, %f, %f), (%f, %f, %f), %f\n",
     //  figList[0].material.albedo.x, figList[0].material.albedo.y, figList[0].material.albedo.z,

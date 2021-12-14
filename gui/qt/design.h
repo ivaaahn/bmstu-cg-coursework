@@ -29,12 +29,13 @@ class Ui_MainWindow
 {
 public:
     QWidget *centralwidget;
-    QHBoxLayout *horizontalLayout_18;
-    QVBoxLayout *verticalLayout_9;
+    QHBoxLayout *horizontalLayout_19;
+    QVBoxLayout *verticalLayout_4;
     QGraphicsView *graphicsView;
-    QHBoxLayout *horizontalLayout_17;
+    QHBoxLayout *horizontalLayout_18;
     QPushButton *cam_move_left_btn;
     QPushButton *cam_turn_left_btn;
+    QHBoxLayout *horizontalLayout_17;
     QPushButton *cam_move_up_btn;
     QPushButton *cam_turn_up_btn;
     QPushButton *cam_zoom_in_btn;
@@ -44,8 +45,10 @@ public:
     QDoubleSpinBox *cam_y_box;
     QLabel *label_6;
     QDoubleSpinBox *cam_z_box;
+    QLabel *label_24;
+    QSpinBox *cam_x_axis_angle_box;
     QLabel *label_23;
-    QSpinBox *cam_turn_box;
+    QSpinBox *cam_y_axis_angle_box;
     QPushButton *cam_zoom_out_btn;
     QPushButton *cam_turn_down_btn;
     QPushButton *cam_move_down_btn;
@@ -90,9 +93,6 @@ public:
     QVBoxLayout *verticalLayout_3;
     QLabel *label_16;
     QDoubleSpinBox *spec_exp_box;
-    QVBoxLayout *verticalLayout_4;
-    QLabel *label_24;
-    QDoubleSpinBox *ambient_box;
     QVBoxLayout *verticalLayout_5;
     QLabel *label_11;
     QDoubleSpinBox *refr_idx_box;
@@ -137,10 +137,10 @@ public:
     QLabel *cam_curr_lbl;
     QListWidget *cams_list;
     QHBoxLayout *horizontalLayout_8;
-    QPushButton *cam_apply_btn;
     QPushButton *cam_add_btn;
-    QPushButton *cam_rm_btn;
     QPushButton *cam_switch_btn;
+    QPushButton *cam_apply_btn;
+    QPushButton *cam_rm_btn;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -237,13 +237,10 @@ public:
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         centralwidget->setToolTipDuration(12);
         centralwidget->setLayoutDirection(Qt::LeftToRight);
-        horizontalLayout_18 = new QHBoxLayout(centralwidget);
-        horizontalLayout_18->setSpacing(5);
-        horizontalLayout_18->setObjectName(QString::fromUtf8("horizontalLayout_18"));
-        horizontalLayout_18->setContentsMargins(0, 0, 2, 2);
-        verticalLayout_9 = new QVBoxLayout();
-        verticalLayout_9->setSpacing(2);
-        verticalLayout_9->setObjectName(QString::fromUtf8("verticalLayout_9"));
+        horizontalLayout_19 = new QHBoxLayout(centralwidget);
+        horizontalLayout_19->setObjectName(QString::fromUtf8("horizontalLayout_19"));
+        verticalLayout_4 = new QVBoxLayout();
+        verticalLayout_4->setObjectName(QString::fromUtf8("verticalLayout_4"));
         graphicsView = new QGraphicsView(centralwidget);
         graphicsView->setObjectName(QString::fromUtf8("graphicsView"));
         QFont font;
@@ -252,10 +249,10 @@ public:
         graphicsView->setFont(font);
         graphicsView->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
-        verticalLayout_9->addWidget(graphicsView);
+        verticalLayout_4->addWidget(graphicsView);
 
-        horizontalLayout_17 = new QHBoxLayout();
-        horizontalLayout_17->setObjectName(QString::fromUtf8("horizontalLayout_17"));
+        horizontalLayout_18 = new QHBoxLayout();
+        horizontalLayout_18->setObjectName(QString::fromUtf8("horizontalLayout_18"));
         cam_move_left_btn = new QPushButton(centralwidget);
         cam_move_left_btn->setObjectName(QString::fromUtf8("cam_move_left_btn"));
         cam_move_left_btn->setMinimumSize(QSize(75, 24));
@@ -270,7 +267,7 @@ public:
         cam_move_left_btn->setCursor(QCursor(Qt::PointingHandCursor));
         cam_move_left_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
-        horizontalLayout_17->addWidget(cam_move_left_btn);
+        horizontalLayout_18->addWidget(cam_move_left_btn);
 
         cam_turn_left_btn = new QPushButton(centralwidget);
         cam_turn_left_btn->setObjectName(QString::fromUtf8("cam_turn_left_btn"));
@@ -280,8 +277,10 @@ public:
         cam_turn_left_btn->setCursor(QCursor(Qt::PointingHandCursor));
         cam_turn_left_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
-        horizontalLayout_17->addWidget(cam_turn_left_btn);
+        horizontalLayout_18->addWidget(cam_turn_left_btn);
 
+        horizontalLayout_17 = new QHBoxLayout();
+        horizontalLayout_17->setObjectName(QString::fromUtf8("horizontalLayout_17"));
         cam_move_up_btn = new QPushButton(centralwidget);
         cam_move_up_btn->setObjectName(QString::fromUtf8("cam_move_up_btn"));
         cam_move_up_btn->setMinimumSize(QSize(75, 24));
@@ -399,39 +398,60 @@ public:
 
         horizontalLayout_17->addWidget(cam_z_box);
 
-        label_23 = new QLabel(centralwidget);
-        label_23->setObjectName(QString::fromUtf8("label_23"));
+        label_24 = new QLabel(centralwidget);
+        label_24->setObjectName(QString::fromUtf8("label_24"));
         QSizePolicy sizePolicy2(QSizePolicy::Preferred, QSizePolicy::Fixed);
         sizePolicy2.setHorizontalStretch(0);
         sizePolicy2.setVerticalStretch(0);
+        sizePolicy2.setHeightForWidth(label_24->sizePolicy().hasHeightForWidth());
+        label_24->setSizePolicy(sizePolicy2);
+        label_24->setMinimumSize(QSize(0, 15));
+        label_24->setMaximumSize(QSize(16777215, 15));
+        label_24->setFont(font3);
+        label_24->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
+        label_24->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
+
+        horizontalLayout_17->addWidget(label_24);
+
+        cam_x_axis_angle_box = new QSpinBox(centralwidget);
+        cam_x_axis_angle_box->setObjectName(QString::fromUtf8("cam_x_axis_angle_box"));
+        sizePolicy.setHeightForWidth(cam_x_axis_angle_box->sizePolicy().hasHeightForWidth());
+        cam_x_axis_angle_box->setSizePolicy(sizePolicy);
+        cam_x_axis_angle_box->setMinimumSize(QSize(50, 25));
+        cam_x_axis_angle_box->setMaximumSize(QSize(50, 25));
+        cam_x_axis_angle_box->setFont(font4);
+        cam_x_axis_angle_box->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
+        cam_x_axis_angle_box->setAlignment(Qt::AlignCenter);
+        cam_x_axis_angle_box->setReadOnly(true);
+        cam_x_axis_angle_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
+
+        horizontalLayout_17->addWidget(cam_x_axis_angle_box);
+
+        label_23 = new QLabel(centralwidget);
+        label_23->setObjectName(QString::fromUtf8("label_23"));
         sizePolicy2.setHeightForWidth(label_23->sizePolicy().hasHeightForWidth());
         label_23->setSizePolicy(sizePolicy2);
         label_23->setMinimumSize(QSize(0, 15));
         label_23->setMaximumSize(QSize(16777215, 15));
-        QFont font5;
-        font5.setFamily(QString::fromUtf8("Bahnschrift Condensed"));
-        font5.setPointSize(12);
-        font5.setBold(true);
-        font5.setWeight(75);
-        label_23->setFont(font5);
+        label_23->setFont(font3);
         label_23->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_23->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
         horizontalLayout_17->addWidget(label_23);
 
-        cam_turn_box = new QSpinBox(centralwidget);
-        cam_turn_box->setObjectName(QString::fromUtf8("cam_turn_box"));
-        sizePolicy.setHeightForWidth(cam_turn_box->sizePolicy().hasHeightForWidth());
-        cam_turn_box->setSizePolicy(sizePolicy);
-        cam_turn_box->setMinimumSize(QSize(50, 25));
-        cam_turn_box->setMaximumSize(QSize(50, 25));
-        cam_turn_box->setFont(font4);
-        cam_turn_box->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
-        cam_turn_box->setAlignment(Qt::AlignCenter);
-        cam_turn_box->setReadOnly(true);
-        cam_turn_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
+        cam_y_axis_angle_box = new QSpinBox(centralwidget);
+        cam_y_axis_angle_box->setObjectName(QString::fromUtf8("cam_y_axis_angle_box"));
+        sizePolicy.setHeightForWidth(cam_y_axis_angle_box->sizePolicy().hasHeightForWidth());
+        cam_y_axis_angle_box->setSizePolicy(sizePolicy);
+        cam_y_axis_angle_box->setMinimumSize(QSize(50, 25));
+        cam_y_axis_angle_box->setMaximumSize(QSize(50, 25));
+        cam_y_axis_angle_box->setFont(font4);
+        cam_y_axis_angle_box->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
+        cam_y_axis_angle_box->setAlignment(Qt::AlignCenter);
+        cam_y_axis_angle_box->setReadOnly(true);
+        cam_y_axis_angle_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
 
-        horizontalLayout_17->addWidget(cam_turn_box);
+        horizontalLayout_17->addWidget(cam_y_axis_angle_box);
 
         cam_zoom_out_btn = new QPushButton(centralwidget);
         cam_zoom_out_btn->setObjectName(QString::fromUtf8("cam_zoom_out_btn"));
@@ -487,10 +507,13 @@ public:
         horizontalLayout_17->addWidget(cam_move_right_btn);
 
 
-        verticalLayout_9->addLayout(horizontalLayout_17);
+        horizontalLayout_18->addLayout(horizontalLayout_17);
 
 
-        horizontalLayout_18->addLayout(verticalLayout_9);
+        verticalLayout_4->addLayout(horizontalLayout_18);
+
+
+        horizontalLayout_19->addLayout(verticalLayout_4);
 
         verticalLayout_8 = new QVBoxLayout();
         verticalLayout_8->setObjectName(QString::fromUtf8("verticalLayout_8"));
@@ -500,10 +523,10 @@ public:
         label_13->setObjectName(QString::fromUtf8("label_13"));
         sizePolicy2.setHeightForWidth(label_13->sizePolicy().hasHeightForWidth());
         label_13->setSizePolicy(sizePolicy2);
-        QFont font6;
-        font6.setFamily(QString::fromUtf8("Arial Black"));
-        font6.setPointSize(11);
-        label_13->setFont(font6);
+        QFont font5;
+        font5.setFamily(QString::fromUtf8("Arial Black"));
+        font5.setPointSize(11);
+        label_13->setFont(font5);
         label_13->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_13->setAlignment(Qt::AlignCenter);
 
@@ -513,12 +536,12 @@ public:
         horizontalLayout_12->setObjectName(QString::fromUtf8("horizontalLayout_12"));
         label = new QLabel(centralwidget);
         label->setObjectName(QString::fromUtf8("label"));
-        QFont font7;
-        font7.setFamily(QString::fromUtf8("Lucida Console"));
-        font7.setPointSize(10);
-        font7.setBold(true);
-        font7.setWeight(75);
-        label->setFont(font7);
+        QFont font6;
+        font6.setFamily(QString::fromUtf8("Lucida Console"));
+        font6.setPointSize(10);
+        font6.setBold(true);
+        font6.setWeight(75);
+        label->setFont(font6);
         label->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label->setAlignment(Qt::AlignCenter);
 
@@ -546,7 +569,7 @@ public:
 
         label_3 = new QLabel(centralwidget);
         label_3->setObjectName(QString::fromUtf8("label_3"));
-        label_3->setFont(font7);
+        label_3->setFont(font6);
         label_3->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_3->setAlignment(Qt::AlignCenter);
 
@@ -571,7 +594,7 @@ public:
 
         label_2 = new QLabel(centralwidget);
         label_2->setObjectName(QString::fromUtf8("label_2"));
-        label_2->setFont(font7);
+        label_2->setFont(font6);
         label_2->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_2->setAlignment(Qt::AlignCenter);
 
@@ -665,10 +688,10 @@ public:
         palette1.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         scale_btn->setPalette(palette1);
-        QFont font8;
-        font8.setFamily(QString::fromUtf8("Bahnschrift Condensed"));
-        font8.setPointSize(10);
-        scale_btn->setFont(font8);
+        QFont font7;
+        font7.setFamily(QString::fromUtf8("Bahnschrift Condensed"));
+        font7.setPointSize(10);
+        scale_btn->setFont(font7);
         scale_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_14->addWidget(scale_btn);
@@ -735,7 +758,7 @@ public:
         palette2.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         rotate_btn->setPalette(palette2);
-        rotate_btn->setFont(font8);
+        rotate_btn->setFont(font7);
         rotate_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_14->addWidget(rotate_btn);
@@ -802,7 +825,7 @@ public:
         palette3.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         move_btn->setPalette(palette3);
-        move_btn->setFont(font8);
+        move_btn->setFont(font7);
         move_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_14->addWidget(move_btn);
@@ -818,12 +841,12 @@ public:
         label_25->setSizePolicy(sizePolicy);
         label_25->setMinimumSize(QSize(0, 15));
         label_25->setMaximumSize(QSize(16777215, 15));
-        QFont font9;
-        font9.setFamily(QString::fromUtf8("Bahnschrift Condensed"));
-        font9.setPointSize(12);
-        font9.setBold(false);
-        font9.setWeight(50);
-        label_25->setFont(font9);
+        QFont font8;
+        font8.setFamily(QString::fromUtf8("Bahnschrift Condensed"));
+        font8.setPointSize(12);
+        font8.setBold(false);
+        font8.setWeight(50);
+        label_25->setFont(font8);
         label_25->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_25->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -835,7 +858,7 @@ public:
         mod_curr_lbl->setSizePolicy(sizePolicy);
         mod_curr_lbl->setMinimumSize(QSize(0, 15));
         mod_curr_lbl->setMaximumSize(QSize(16777215, 15));
-        mod_curr_lbl->setFont(font9);
+        mod_curr_lbl->setFont(font8);
         mod_curr_lbl->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         mod_curr_lbl->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -853,9 +876,9 @@ public:
         models_list->setSizePolicy(sizePolicy4);
         models_list->setMinimumSize(QSize(316, 100));
         models_list->setMaximumSize(QSize(316, 100));
-        QFont font10;
-        font10.setPointSize(10);
-        models_list->setFont(font10);
+        QFont font9;
+        font9.setPointSize(10);
+        models_list->setFont(font9);
         models_list->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         verticalLayout_7->addWidget(models_list);
@@ -924,7 +947,7 @@ public:
         palette4.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         mod_load_btn->setPalette(palette4);
-        mod_load_btn->setFont(font8);
+        mod_load_btn->setFont(font7);
         mod_load_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_15->addWidget(mod_load_btn);
@@ -991,7 +1014,7 @@ public:
         palette5.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         mod_rm_btn->setPalette(palette5);
-        mod_rm_btn->setFont(font8);
+        mod_rm_btn->setFont(font7);
         mod_rm_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_15->addWidget(mod_rm_btn);
@@ -1058,7 +1081,7 @@ public:
         palette6.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         mod_switch_btn->setPalette(palette6);
-        mod_switch_btn->setFont(font8);
+        mod_switch_btn->setFont(font7);
         mod_switch_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_15->addWidget(mod_switch_btn);
@@ -1080,7 +1103,7 @@ public:
         label_18->setSizePolicy(sizePolicy5);
         label_18->setMinimumSize(QSize(0, 15));
         label_18->setMaximumSize(QSize(16777215, 15));
-        label_18->setFont(font6);
+        label_18->setFont(font5);
         label_18->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_18->setAlignment(Qt::AlignCenter);
 
@@ -1094,12 +1117,12 @@ public:
         label_15->setSizePolicy(sizePolicy2);
         label_15->setMinimumSize(QSize(0, 15));
         label_15->setMaximumSize(QSize(16777215, 15));
-        QFont font11;
-        font11.setFamily(QString::fromUtf8("Bahnschrift Condensed"));
-        font11.setPointSize(10);
-        font11.setBold(true);
-        font11.setWeight(75);
-        label_15->setFont(font11);
+        QFont font10;
+        font10.setFamily(QString::fromUtf8("Bahnschrift Condensed"));
+        font10.setPointSize(10);
+        font10.setBold(true);
+        font10.setWeight(75);
+        label_15->setFont(font10);
         label_15->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_15->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -1164,7 +1187,7 @@ public:
         label_12->setSizePolicy(sizePolicy2);
         label_12->setMinimumSize(QSize(0, 15));
         label_12->setMaximumSize(QSize(16777215, 15));
-        label_12->setFont(font11);
+        label_12->setFont(font10);
         label_12->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_12->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -1247,7 +1270,7 @@ public:
         label_16->setSizePolicy(sizePolicy2);
         label_16->setMinimumSize(QSize(0, 15));
         label_16->setMaximumSize(QSize(16777215, 15));
-        label_16->setFont(font11);
+        label_16->setFont(font10);
         label_16->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_16->setAlignment(Qt::AlignCenter);
 
@@ -1271,38 +1294,6 @@ public:
 
         horizontalLayout_9->addLayout(verticalLayout_3);
 
-        verticalLayout_4 = new QVBoxLayout();
-        verticalLayout_4->setObjectName(QString::fromUtf8("verticalLayout_4"));
-        label_24 = new QLabel(centralwidget);
-        label_24->setObjectName(QString::fromUtf8("label_24"));
-        sizePolicy2.setHeightForWidth(label_24->sizePolicy().hasHeightForWidth());
-        label_24->setSizePolicy(sizePolicy2);
-        label_24->setMinimumSize(QSize(0, 15));
-        label_24->setMaximumSize(QSize(16777215, 15));
-        label_24->setFont(font11);
-        label_24->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
-        label_24->setAlignment(Qt::AlignCenter);
-
-        verticalLayout_4->addWidget(label_24);
-
-        ambient_box = new QDoubleSpinBox(centralwidget);
-        ambient_box->setObjectName(QString::fromUtf8("ambient_box"));
-        sizePolicy2.setHeightForWidth(ambient_box->sizePolicy().hasHeightForWidth());
-        ambient_box->setSizePolicy(sizePolicy2);
-        ambient_box->setMinimumSize(QSize(0, 25));
-        ambient_box->setMaximumSize(QSize(67, 25));
-        ambient_box->setFont(font4);
-        ambient_box->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
-        ambient_box->setAlignment(Qt::AlignCenter);
-        ambient_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
-        ambient_box->setMinimum(-10000000000000000.000000000000000);
-        ambient_box->setMaximum(10000000000000000.000000000000000);
-
-        verticalLayout_4->addWidget(ambient_box);
-
-
-        horizontalLayout_9->addLayout(verticalLayout_4);
-
         verticalLayout_5 = new QVBoxLayout();
         verticalLayout_5->setObjectName(QString::fromUtf8("verticalLayout_5"));
         label_11 = new QLabel(centralwidget);
@@ -1311,7 +1302,7 @@ public:
         label_11->setSizePolicy(sizePolicy2);
         label_11->setMinimumSize(QSize(0, 15));
         label_11->setMaximumSize(QSize(16777215, 15));
-        label_11->setFont(font11);
+        label_11->setFont(font10);
         label_11->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_11->setAlignment(Qt::AlignCenter);
 
@@ -1402,7 +1393,7 @@ public:
         palette7.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         mat_apply_btn->setPalette(palette7);
-        mat_apply_btn->setFont(font8);
+        mat_apply_btn->setFont(font7);
         mat_apply_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_13->addWidget(mat_apply_btn);
@@ -1469,7 +1460,7 @@ public:
         palette8.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         mat_load_btn->setPalette(palette8);
-        mat_load_btn->setFont(font8);
+        mat_load_btn->setFont(font7);
         mat_load_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_13->addWidget(mat_load_btn);
@@ -1488,7 +1479,7 @@ public:
         label_14->setSizePolicy(sizePolicy5);
         label_14->setMinimumSize(QSize(0, 15));
         label_14->setMaximumSize(QSize(16777215, 15));
-        label_14->setFont(font6);
+        label_14->setFont(font5);
         label_14->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_14->setAlignment(Qt::AlignCenter);
 
@@ -1500,7 +1491,7 @@ public:
         label_20->setObjectName(QString::fromUtf8("label_20"));
         label_20->setMinimumSize(QSize(0, 15));
         label_20->setMaximumSize(QSize(16777215, 15));
-        label_20->setFont(font11);
+        label_20->setFont(font10);
         label_20->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_20->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -1527,7 +1518,7 @@ public:
         label_19->setObjectName(QString::fromUtf8("label_19"));
         label_19->setMinimumSize(QSize(0, 15));
         label_19->setMaximumSize(QSize(16777215, 15));
-        label_19->setFont(font11);
+        label_19->setFont(font10);
         label_19->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_19->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -1610,7 +1601,7 @@ public:
         palette9.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         rtree_h_apply_btn->setPalette(palette9);
-        rtree_h_apply_btn->setFont(font8);
+        rtree_h_apply_btn->setFont(font7);
         rtree_h_apply_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_2->addWidget(rtree_h_apply_btn);
@@ -1624,7 +1615,7 @@ public:
         label_8->setObjectName(QString::fromUtf8("label_8"));
         sizePolicy2.setHeightForWidth(label_8->sizePolicy().hasHeightForWidth());
         label_8->setSizePolicy(sizePolicy2);
-        label_8->setFont(font7);
+        label_8->setFont(font6);
         label_8->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_8->setAlignment(Qt::AlignCenter);
 
@@ -1649,7 +1640,7 @@ public:
         label_9->setObjectName(QString::fromUtf8("label_9"));
         sizePolicy2.setHeightForWidth(label_9->sizePolicy().hasHeightForWidth());
         label_9->setSizePolicy(sizePolicy2);
-        label_9->setFont(font7);
+        label_9->setFont(font6);
         label_9->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_9->setAlignment(Qt::AlignCenter);
 
@@ -1674,7 +1665,7 @@ public:
         label_22->setObjectName(QString::fromUtf8("label_22"));
         sizePolicy2.setHeightForWidth(label_22->sizePolicy().hasHeightForWidth());
         label_22->setSizePolicy(sizePolicy2);
-        label_22->setFont(font7);
+        label_22->setFont(font6);
         label_22->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_22->setAlignment(Qt::AlignCenter);
 
@@ -1701,7 +1692,7 @@ public:
         label_17->setSizePolicy(sizePolicy2);
         label_17->setMinimumSize(QSize(0, 15));
         label_17->setMaximumSize(QSize(16777215, 15));
-        label_17->setFont(font11);
+        label_17->setFont(font10);
         label_17->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_17->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -1733,7 +1724,7 @@ public:
         label_27->setSizePolicy(sizePolicy);
         label_27->setMinimumSize(QSize(0, 15));
         label_27->setMaximumSize(QSize(16777215, 15));
-        label_27->setFont(font9);
+        label_27->setFont(font8);
         label_27->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_27->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -1745,7 +1736,7 @@ public:
         light_curr_lbl->setSizePolicy(sizePolicy);
         light_curr_lbl->setMinimumSize(QSize(0, 15));
         light_curr_lbl->setMaximumSize(QSize(16777215, 15));
-        light_curr_lbl->setFont(font9);
+        light_curr_lbl->setFont(font8);
         light_curr_lbl->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         light_curr_lbl->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -1760,7 +1751,7 @@ public:
         lights_list->setSizePolicy(sizePolicy4);
         lights_list->setMinimumSize(QSize(316, 80));
         lights_list->setMaximumSize(QSize(316, 80));
-        lights_list->setFont(font10);
+        lights_list->setFont(font9);
         lights_list->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         verticalLayout->addWidget(lights_list);
@@ -1829,7 +1820,7 @@ public:
         palette10.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         light_add_btn->setPalette(palette10);
-        light_add_btn->setFont(font8);
+        light_add_btn->setFont(font7);
         light_add_btn->setAutoFillBackground(false);
         light_add_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
@@ -1897,7 +1888,7 @@ public:
         palette11.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         light_load_btn->setPalette(palette11);
-        light_load_btn->setFont(font8);
+        light_load_btn->setFont(font7);
         light_load_btn->setAutoFillBackground(false);
         light_load_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
@@ -1965,7 +1956,7 @@ public:
         palette12.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         light_rm_btn->setPalette(palette12);
-        light_rm_btn->setFont(font8);
+        light_rm_btn->setFont(font7);
         light_rm_btn->setAutoFillBackground(false);
         light_rm_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
@@ -2038,7 +2029,7 @@ public:
         palette13.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         light_switch_btn->setPalette(palette13);
-        light_switch_btn->setFont(font8);
+        light_switch_btn->setFont(font7);
         light_switch_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_5->addWidget(light_switch_btn);
@@ -2105,7 +2096,7 @@ public:
         palette14.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
         light_apply_btn->setPalette(palette14);
-        light_apply_btn->setFont(font8);
+        light_apply_btn->setFont(font7);
         light_apply_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
         horizontalLayout_5->addWidget(light_apply_btn);
@@ -2124,7 +2115,7 @@ public:
         label_7->setSizePolicy(sizePolicy5);
         label_7->setMinimumSize(QSize(0, 15));
         label_7->setMaximumSize(QSize(16777215, 15));
-        label_7->setFont(font6);
+        label_7->setFont(font5);
         label_7->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_7->setAlignment(Qt::AlignCenter);
 
@@ -2134,9 +2125,9 @@ public:
         horizontalLayout_6->setObjectName(QString::fromUtf8("horizontalLayout_6"));
         label_21 = new QLabel(centralwidget);
         label_21->setObjectName(QString::fromUtf8("label_21"));
-        label_21->setMinimumSize(QSize(234, 0));
+        label_21->setMinimumSize(QSize(160, 0));
         label_21->setMaximumSize(QSize(16777215, 15));
-        label_21->setFont(font9);
+        label_21->setFont(font8);
         label_21->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_21->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -2168,7 +2159,7 @@ public:
         sizePolicy6.setHeightForWidth(label_29->sizePolicy().hasHeightForWidth());
         label_29->setSizePolicy(sizePolicy6);
         label_29->setMaximumSize(QSize(16777215, 15));
-        label_29->setFont(font9);
+        label_29->setFont(font8);
         label_29->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         label_29->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -2179,7 +2170,7 @@ public:
         sizePolicy6.setHeightForWidth(cam_curr_lbl->sizePolicy().hasHeightForWidth());
         cam_curr_lbl->setSizePolicy(sizePolicy6);
         cam_curr_lbl->setMaximumSize(QSize(16777215, 15));
-        cam_curr_lbl->setFont(font9);
+        cam_curr_lbl->setFont(font8);
         cam_curr_lbl->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         cam_curr_lbl->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
 
@@ -2194,7 +2185,7 @@ public:
         cams_list->setSizePolicy(sizePolicy4);
         cams_list->setMinimumSize(QSize(316, 80));
         cams_list->setMaximumSize(QSize(316, 80));
-        cams_list->setFont(font10);
+        cams_list->setFont(font9);
         cams_list->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
         cams_list->setGridSize(QSize(1, 0));
         cams_list->setViewMode(QListView::ListMode);
@@ -2205,12 +2196,12 @@ public:
 
         horizontalLayout_8 = new QHBoxLayout();
         horizontalLayout_8->setObjectName(QString::fromUtf8("horizontalLayout_8"));
-        cam_apply_btn = new QPushButton(centralwidget);
-        cam_apply_btn->setObjectName(QString::fromUtf8("cam_apply_btn"));
-        sizePolicy2.setHeightForWidth(cam_apply_btn->sizePolicy().hasHeightForWidth());
-        cam_apply_btn->setSizePolicy(sizePolicy2);
-        cam_apply_btn->setMinimumSize(QSize(75, 30));
-        cam_apply_btn->setMaximumSize(QSize(75, 30));
+        cam_add_btn = new QPushButton(centralwidget);
+        cam_add_btn->setObjectName(QString::fromUtf8("cam_add_btn"));
+        sizePolicy2.setHeightForWidth(cam_add_btn->sizePolicy().hasHeightForWidth());
+        cam_add_btn->setSizePolicy(sizePolicy2);
+        cam_add_btn->setMinimumSize(QSize(75, 30));
+        cam_add_btn->setMaximumSize(QSize(75, 30));
         QPalette palette15;
         palette15.setBrush(QPalette::Active, QPalette::WindowText, brush);
         palette15.setBrush(QPalette::Active, QPalette::Button, brush6);
@@ -2266,18 +2257,18 @@ public:
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
         palette15.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
-        cam_apply_btn->setPalette(palette15);
-        cam_apply_btn->setFont(font8);
-        cam_apply_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
+        cam_add_btn->setPalette(palette15);
+        cam_add_btn->setFont(font7);
+        cam_add_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
-        horizontalLayout_8->addWidget(cam_apply_btn);
+        horizontalLayout_8->addWidget(cam_add_btn);
 
-        cam_add_btn = new QPushButton(centralwidget);
-        cam_add_btn->setObjectName(QString::fromUtf8("cam_add_btn"));
-        sizePolicy2.setHeightForWidth(cam_add_btn->sizePolicy().hasHeightForWidth());
-        cam_add_btn->setSizePolicy(sizePolicy2);
-        cam_add_btn->setMinimumSize(QSize(75, 30));
-        cam_add_btn->setMaximumSize(QSize(75, 30));
+        cam_switch_btn = new QPushButton(centralwidget);
+        cam_switch_btn->setObjectName(QString::fromUtf8("cam_switch_btn"));
+        sizePolicy2.setHeightForWidth(cam_switch_btn->sizePolicy().hasHeightForWidth());
+        cam_switch_btn->setSizePolicy(sizePolicy2);
+        cam_switch_btn->setMinimumSize(QSize(75, 30));
+        cam_switch_btn->setMaximumSize(QSize(75, 30));
         QPalette palette16;
         palette16.setBrush(QPalette::Active, QPalette::WindowText, brush);
         palette16.setBrush(QPalette::Active, QPalette::Button, brush6);
@@ -2333,18 +2324,18 @@ public:
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
         palette16.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
-        cam_add_btn->setPalette(palette16);
-        cam_add_btn->setFont(font8);
-        cam_add_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
+        cam_switch_btn->setPalette(palette16);
+        cam_switch_btn->setFont(font7);
+        cam_switch_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
-        horizontalLayout_8->addWidget(cam_add_btn);
+        horizontalLayout_8->addWidget(cam_switch_btn);
 
-        cam_rm_btn = new QPushButton(centralwidget);
-        cam_rm_btn->setObjectName(QString::fromUtf8("cam_rm_btn"));
-        sizePolicy2.setHeightForWidth(cam_rm_btn->sizePolicy().hasHeightForWidth());
-        cam_rm_btn->setSizePolicy(sizePolicy2);
-        cam_rm_btn->setMinimumSize(QSize(75, 30));
-        cam_rm_btn->setMaximumSize(QSize(75, 30));
+        cam_apply_btn = new QPushButton(centralwidget);
+        cam_apply_btn->setObjectName(QString::fromUtf8("cam_apply_btn"));
+        sizePolicy2.setHeightForWidth(cam_apply_btn->sizePolicy().hasHeightForWidth());
+        cam_apply_btn->setSizePolicy(sizePolicy2);
+        cam_apply_btn->setMinimumSize(QSize(75, 30));
+        cam_apply_btn->setMaximumSize(QSize(75, 30));
         QPalette palette17;
         palette17.setBrush(QPalette::Active, QPalette::WindowText, brush);
         palette17.setBrush(QPalette::Active, QPalette::Button, brush6);
@@ -2400,18 +2391,18 @@ public:
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
         palette17.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
-        cam_rm_btn->setPalette(palette17);
-        cam_rm_btn->setFont(font8);
-        cam_rm_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
+        cam_apply_btn->setPalette(palette17);
+        cam_apply_btn->setFont(font7);
+        cam_apply_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
-        horizontalLayout_8->addWidget(cam_rm_btn);
+        horizontalLayout_8->addWidget(cam_apply_btn);
 
-        cam_switch_btn = new QPushButton(centralwidget);
-        cam_switch_btn->setObjectName(QString::fromUtf8("cam_switch_btn"));
-        sizePolicy2.setHeightForWidth(cam_switch_btn->sizePolicy().hasHeightForWidth());
-        cam_switch_btn->setSizePolicy(sizePolicy2);
-        cam_switch_btn->setMinimumSize(QSize(75, 30));
-        cam_switch_btn->setMaximumSize(QSize(75, 30));
+        cam_rm_btn = new QPushButton(centralwidget);
+        cam_rm_btn->setObjectName(QString::fromUtf8("cam_rm_btn"));
+        sizePolicy2.setHeightForWidth(cam_rm_btn->sizePolicy().hasHeightForWidth());
+        cam_rm_btn->setSizePolicy(sizePolicy2);
+        cam_rm_btn->setMinimumSize(QSize(75, 30));
+        cam_rm_btn->setMaximumSize(QSize(75, 30));
         QPalette palette18;
         palette18.setBrush(QPalette::Active, QPalette::WindowText, brush);
         palette18.setBrush(QPalette::Active, QPalette::Button, brush6);
@@ -2467,11 +2458,11 @@ public:
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
         palette18.setBrush(QPalette::Disabled, QPalette::PlaceholderText, brush10);
 #endif
-        cam_switch_btn->setPalette(palette18);
-        cam_switch_btn->setFont(font8);
-        cam_switch_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
+        cam_rm_btn->setPalette(palette18);
+        cam_rm_btn->setFont(font7);
+        cam_rm_btn->setLocale(QLocale(QLocale::Russian, QLocale::Russia));
 
-        horizontalLayout_8->addWidget(cam_switch_btn);
+        horizontalLayout_8->addWidget(cam_rm_btn);
 
 
         verticalLayout_2->addLayout(horizontalLayout_8);
@@ -2480,10 +2471,10 @@ public:
         verticalLayout_8->addLayout(verticalLayout_2);
 
 
-        horizontalLayout_18->addLayout(verticalLayout_8);
+        horizontalLayout_19->addLayout(verticalLayout_8);
 
-        horizontalLayout_18->setStretch(0, 50);
-        horizontalLayout_18->setStretch(1, 1);
+        horizontalLayout_19->setStretch(0, 5);
+        horizontalLayout_19->setStretch(1, 1);
         MainWindow->setCentralWidget(centralwidget);
         QWidget::setTabOrder(mod_load_btn, alb1_box);
         QWidget::setTabOrder(alb1_box, alb0_box);
@@ -2491,8 +2482,7 @@ public:
         QWidget::setTabOrder(rotate_btn, scale_btn);
         QWidget::setTabOrder(scale_btn, move_btn);
         QWidget::setTabOrder(move_btn, mod_switch_btn);
-        QWidget::setTabOrder(mod_switch_btn, mod_rm_btn);
-        QWidget::setTabOrder(mod_rm_btn, models_list);
+        QWidget::setTabOrder(mod_switch_btn, models_list);
         QWidget::setTabOrder(models_list, color0_box);
         QWidget::setTabOrder(color0_box, color2_box);
         QWidget::setTabOrder(color2_box, lights_list);
@@ -2516,8 +2506,7 @@ public:
         QWidget::setTabOrder(cam_z_box, light_intensity_box);
         QWidget::setTabOrder(light_intensity_box, light_load_btn);
         QWidget::setTabOrder(light_load_btn, light_add_btn);
-        QWidget::setTabOrder(light_add_btn, ambient_box);
-        QWidget::setTabOrder(ambient_box, cam_add_btn);
+        QWidget::setTabOrder(light_add_btn, cam_add_btn);
         QWidget::setTabOrder(cam_add_btn, light_rm_btn);
         QWidget::setTabOrder(light_rm_btn, cam_turn_up_btn);
         QWidget::setTabOrder(cam_turn_up_btn, cam_turn_down_btn);
@@ -2544,7 +2533,8 @@ public:
         label_4->setText(QCoreApplication::translate("MainWindow", "X", nullptr));
         label_5->setText(QCoreApplication::translate("MainWindow", "Y", nullptr));
         label_6->setText(QCoreApplication::translate("MainWindow", "Z", nullptr));
-        label_23->setText(QCoreApplication::translate("MainWindow", "Turn \302\260", nullptr));
+        label_24->setText(QCoreApplication::translate("MainWindow", "X\302\260", nullptr));
+        label_23->setText(QCoreApplication::translate("MainWindow", "Y\302\260", nullptr));
         cam_zoom_out_btn->setText(QCoreApplication::translate("MainWindow", "-", nullptr));
         cam_turn_down_btn->setText(QCoreApplication::translate("MainWindow", "\342\244\265", nullptr));
         cam_move_down_btn->setText(QCoreApplication::translate("MainWindow", "\342\226\274", nullptr));
@@ -2566,14 +2556,13 @@ public:
         label_15->setText(QCoreApplication::translate("MainWindow", "\320\246\320\262\320\265\321\202", nullptr));
         label_12->setText(QCoreApplication::translate("MainWindow", "\320\220\320\273\321\214\320\261\320\265\320\264\320\276", nullptr));
         label_16->setText(QCoreApplication::translate("MainWindow", "Kexp", nullptr));
-        label_24->setText(QCoreApplication::translate("MainWindow", "Ka", nullptr));
         label_11->setText(QCoreApplication::translate("MainWindow", "RefrIdx", nullptr));
         mat_apply_btn->setText(QCoreApplication::translate("MainWindow", "\320\237\321\200\320\270\320\274\320\265\320\275\320\270\321\202\321\214", nullptr));
         mat_load_btn->setText(QCoreApplication::translate("MainWindow", "\320\227\320\260\320\263\321\200\321\203\320\267\320\270\321\202\321\214", nullptr));
         label_14->setText(QCoreApplication::translate("MainWindow", "\320\241\320\262\320\265\321\202", nullptr));
         label_20->setText(QCoreApplication::translate("MainWindow", "\320\240\320\260\321\201\321\201\320\265\321\217\320\275\320\275\321\213\320\271", nullptr));
         label_19->setText(QCoreApplication::translate("MainWindow", "\320\237\320\265\321\200\320\265\320\276\321\202\321\200\320\260\320\266\320\265\320\275\320\270\321\217", nullptr));
-        rtree_h_apply_btn->setText(QCoreApplication::translate("MainWindow", "\320\237\321\200\320\270\320\274\320\265\320\275\320\270\321\202\321\214", nullptr));
+        rtree_h_apply_btn->setText(QCoreApplication::translate("MainWindow", "\320\227\320\260\320\264\320\260\321\202\321\214", nullptr));
         label_8->setText(QCoreApplication::translate("MainWindow", "X", nullptr));
         label_9->setText(QCoreApplication::translate("MainWindow", "Y", nullptr));
         label_22->setText(QCoreApplication::translate("MainWindow", "Z", nullptr));
@@ -2589,10 +2578,10 @@ public:
         label_21->setText(QCoreApplication::translate("MainWindow", "\320\236\320\261\320\273\320\260\321\201\321\202\321\214 \320\275\320\260\320\261\320\273\321\216\320\264\320\265\320\275\320\270\321\217\302\260", nullptr));
         label_29->setText(QCoreApplication::translate("MainWindow", "\320\242\320\265\320\272\321\203\321\211:", nullptr));
         cam_curr_lbl->setText(QCoreApplication::translate("MainWindow", "None", nullptr));
-        cam_apply_btn->setText(QCoreApplication::translate("MainWindow", "\320\227\320\260\320\264\320\260\321\202\321\214", nullptr));
         cam_add_btn->setText(QCoreApplication::translate("MainWindow", "\320\224\320\276\320\261\320\260\320\262\320\270\321\202\321\214", nullptr));
-        cam_rm_btn->setText(QCoreApplication::translate("MainWindow", "\320\243\320\264\320\260\320\273\320\270\321\202\321\214", nullptr));
         cam_switch_btn->setText(QCoreApplication::translate("MainWindow", "\320\237\320\265\321\200\320\265\320\272\320\273.", nullptr));
+        cam_apply_btn->setText(QCoreApplication::translate("MainWindow", "\320\227\320\260\320\264\320\260\321\202\321\214", nullptr));
+        cam_rm_btn->setText(QCoreApplication::translate("MainWindow", "\320\243\320\264\320\260\320\273\320\270\321\202\321\214", nullptr));
     } // retranslateUi
 
 };

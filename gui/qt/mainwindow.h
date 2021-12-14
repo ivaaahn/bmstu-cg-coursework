@@ -27,6 +27,9 @@ public:
     ~MainWindow() override;
 
 private:
+    void _rotateCam(const int2 &delta);
+    void _shiftCam(const float3 &delta);
+
     bool _modSelected();
 
     bool _camSelected();
@@ -51,12 +54,16 @@ private:
 
     bool checkCam();
 
-    void updateLocation();
-    void updateLightInfo();
+    void _updateLightInfo();
     void _updateMaterialInfo();
     void _updateSceneLightData();
+    void _updateCamInfo();
 
 
+    void _setCamInfo(const float3 &pos, const int2 &angles, int fov);
+
+    int _readCamFov();
+    void _updateCamFov(int value);
     float _readLightIntensity();
     int _readRTreeH();
     float _readSceneAmbient();
@@ -65,7 +72,6 @@ private:
     float3 _readModColor();
     float4 _readAlbedo();
     float3 _readLightCoords();
-    float3 _readLocationCoords(int& turn, int& fov);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -101,6 +107,8 @@ private slots:
     void on_light_rm_btn_clicked();
 
     void on_cam_add_btn_clicked();
+
+    void on_cam_switch_btn_clicked();
 
     void on_cam_rm_btn_clicked();
 

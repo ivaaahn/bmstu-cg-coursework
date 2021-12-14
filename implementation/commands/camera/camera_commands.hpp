@@ -11,6 +11,7 @@
 #include "commands/command.hpp"
 
 #include "math/linalg.hpp"
+
 using namespace linalg::aliases;
 
 class CameraCommand : public Command {};
@@ -20,7 +21,7 @@ class AddCamera : public CameraCommand {
 public:
     AddCamera() = delete;
 
-    AddCamera(const float3 &cords);
+    AddCamera(const float3& cords);
 
     ~AddCamera() override = default;
 
@@ -35,7 +36,7 @@ class MoveCamera : public CameraCommand {
 public:
     MoveCamera() = delete;
 
-    MoveCamera(size_t cameraId, const float3 &cords);
+    MoveCamera(size_t cameraId, const float3& cords);
 
     ~MoveCamera() override = default;
 
@@ -44,6 +45,21 @@ public:
 private:
     size_t cameraId;
     float3 cords;
+};
+
+class RotateCamera : public CameraCommand {
+public:
+    RotateCamera() = delete;
+
+    RotateCamera(size_t camId, const int2& angles) : camId(camId), angles(angles) {}
+
+    ~RotateCamera() override = default;
+
+    void execute() override;
+
+private:
+    size_t camId;
+    int2 angles;
 };
 
 
@@ -77,22 +93,40 @@ private:
 };
 
 
-class GetLocation : public CameraCommand {
+class GetCameraInfo : public CameraCommand {
 public:
-    GetLocation() = delete;
+    GetCameraInfo() = delete;
 
-    GetLocation(size_t camId, std::shared_ptr<float3>& cords) : camId(camId), cords(cords) {}
+    GetCameraInfo(size_t camId, std::shared_ptr<float3>& pos, std::shared_ptr<int2>& angles,
+                  std::shared_ptr<int>& fov) :
+            camId(camId), pos(pos), angles(angles), fov(fov) {}
 
-    ~GetLocation() override = default;
+    ~GetCameraInfo() override = default;
 
     void execute() override;
 
 private:
     size_t camId;
-    std::shared_ptr<float3> &cords;
+    std::shared_ptr<float3> pos;
+    std::shared_ptr<int2> angles;
+    std::shared_ptr<int> fov;
 };
-;
 
+class SetCameraFov : public CameraCommand {
+public:
+    SetCameraFov() = delete;
+
+    SetCameraFov(size_t camId, int fov) :
+            camId(camId), fov(fov) {}
+
+    ~SetCameraFov() override = default;
+
+    void execute() override;
+
+private:
+    size_t camId;
+    int fov;
+};
 
 
 #endif //__CG_COURSEWORK_CAMERA_COMMANDS_HPP__

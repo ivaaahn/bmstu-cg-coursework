@@ -8,18 +8,6 @@
 
 using linalg::aliases::float3;
 
-Camera::Camera(const float3 &position) : position(position) {}
-
-void Camera::shift(const float3 &params) {
-    this->position.x += params.x;
-    this->position.y += params.y;
-    this->position.z += params.z;
-}
-
-const float3& Camera::getPos() const {
-    return this->position;
-}
-
 Camera::Camera(const std::shared_ptr<std::ifstream>& srcFile) {
     float x, y, z;
 

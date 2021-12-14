@@ -11,9 +11,8 @@
 #include "drawer/factory/qt_drawer_factory.hpp"
 #include "../../consts.hpp"
 
-#include "design_light_add_popup.h"
-
 #define CAM_SHIFT 2
+#define CAM_ANGLE 5
 
 #define NONE_TXT "None"
 
@@ -51,23 +50,12 @@ float4 MainWindow::_readAlbedo() {
     };
 }
 
-float3 MainWindow::_readLocationCoords(int& turn, int& fov) {
-    turn = ui->cam_turn_box->value();
-    fov = ui->cam_fov_box->value();
-    return {
-            (float)ui->cam_x_box->value(),
-            (float)ui->cam_y_box->value(),
-            (float)ui->cam_z_box->value()
-    };
-}
-
 Material MainWindow::_readMaterial() {
     return {
             (float)(ui->refr_idx_box->value()),
             this->_readAlbedo(),
             this->_readModColor(),
-            (float)(ui->spec_exp_box->value()),
-            (float)(ui->ambient_box->value())
+            (float)(ui->spec_exp_box->value())
     };
 }
 
@@ -206,7 +194,7 @@ void MainWindow::on_light_load_btn_clicked() {
 
     auto lights_list = ui->lights_list;
     ui->light_curr_lbl->setText(lights_list->item(lights_list->count() - 1)->text());
-    this->updateLightInfo();
+    this->_updateLightInfo();
 }
 
 //void MainWindow::on_clear_scene_btn_clicked() {
@@ -252,12 +240,12 @@ void MainWindow::on_light_add_btn_clicked() {
         return;
     }
 
-    this->updateLightInfo();
+    this->_updateLightInfo();
 }
 
 void MainWindow::on_cam_add_btn_clicked() {
     try {
-        this->facade->execute(std::make_shared<AddCamera>(float3{0., 0., -1.}));
+        this->facade->execute(std::make_shared<AddCamera>(float3{0., 0., 1.}));
         ui->cams_list->addItem(QString("Camera#") + QString::number(++this->last_cam_id));
     }
     catch (BaseException& ex) {
@@ -267,10 +255,10 @@ void MainWindow::on_cam_add_btn_clicked() {
 
     auto cams_list = ui->cams_list;
     ui->cam_curr_lbl->setText(cams_list->item(cams_list->count() - 1)->text());
-    this->updateLocation();
+    this->_updateCamInfo();
 }
 
-void MainWindow::updateLightInfo() {
+void MainWindow::_updateLightInfo() {
     auto cords = std::make_shared<float3>();
     auto intensity = std::make_shared<float>();
 
@@ -281,22 +269,6 @@ void MainWindow::updateLightInfo() {
     ui->light_z_box->setValue(cords->z);
 
     ui->light_intensity_box->setValue(*intensity);
-}
-
-
-void MainWindow::updateLocation() {
-    auto cords = std::make_shared<float3>();
-    this->facade->execute(std::make_shared<GetLocation>(_currCamId(), cords));
-
-
-    ui->cam_x_box->setValue(cords->x);
-    ui->cam_y_box->setValue(cords->y);
-    ui->cam_z_box->setValue(cords->z);
-
-//    TODO
-//    ui->cam_turn_box->setValue(cords->turn);
-//    ui->cam_fov_box->setValue(cords->fov);
-
 }
 
 
@@ -317,29 +289,24 @@ void MainWindow::updateLocation() {
 
 
 
-//void MainWindow::on_change_camera_btn_clicked() {
-//    if (ui->cams_list->currentRow() < 0) {
-//        QMessageBox::critical(nullptr, "Ошибка", "Выберите камеру, которую хотите сделать текущей");
-//        return;
-//    }
-//
-//    auto curr_item = ui->cams_list->currentItem();
-//    if (!curr_item->text().contains("camera")) {
-//        QMessageBox::critical(nullptr, "Ошибка", "Выберите корректную камеру");
-//        return;
-//    }
-//
-//    auto camera_set_cmd = std::make_shared<SetCamera>(ui->cams_list->currentRow());
-//
-//    try {
-//        this->facade->execute(camera_set_cmd);
-//        this->updateScene();
-//        ui->curr_camera_lbl->setText(curr_item->text());
-//    } catch (BaseException& ex) {
-//        QMessageBox::warning(this, "Error", QString(ex.what()));
-//        return;
-//    }
-//}
+void MainWindow::on_cam_switch_btn_clicked() {
+    if (ui->cams_list->currentRow() < 0) {
+        QMessageBox::critical(nullptr, "Ошибка", "Выберите камеру, которую хотите сделать текущей");
+        return;
+    }
+
+    try {
+        this->facade->execute(std::make_shared<SetCamera>(ui->cams_list->currentRow()));
+        this->updateScene();
+    } catch (BaseException& ex) {
+        QMessageBox::warning(this, "Error", QString(ex.what()));
+        return;
+    }
+
+    ui->cam_curr_lbl->setText(ui->cams_list->currentItem()->text());
+    this->_updateCamInfo();
+
+}
 
 
 void MainWindow::on_mod_rm_btn_clicked() {
@@ -399,90 +366,6 @@ void MainWindow::on_light_rm_btn_clicked() {
 }
 
 
-void MainWindow::on_cam_zoom_in_btn_clicked() {
-    if (!this->checkCam()) return;
-
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->_currCamId(), float3{0, 0, -CAM_SHIFT});
-    try {
-        this->facade->execute(camera_move_cmd);
-        this->updateScene();
-    } catch (BaseException& ex) {
-        QMessageBox::warning(this, "Error", QString(ex.what()));
-    }
-
-    this->updateLocation();
-}
-
-void MainWindow::on_cam_zoom_out_btn_clicked() {
-    if (!this->checkCam()) return;
-
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->_currCamId(), float3{0, 0, CAM_SHIFT});
-    try {
-        this->facade->execute(camera_move_cmd);
-        this->updateScene();
-    } catch (BaseException& ex) {
-        QMessageBox::warning(this, "Error", QString(ex.what()));
-    }
-    this->updateLocation();
-
-}
-
-void MainWindow::on_cam_move_right_btn_clicked() {
-    if (!this->checkCam()) return;
-
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->_currCamId(), float3{CAM_SHIFT, 0, 0});
-    try {
-        this->facade->execute(camera_move_cmd);
-        this->updateScene();
-    } catch (BaseException& ex) {
-        QMessageBox::warning(this, "Error", QString(ex.what()));
-    }
-    this->updateLocation();
-
-}
-
-void MainWindow::on_cam_move_left_btn_clicked() {
-    if (!this->checkCam()) return;
-
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->_currCamId(), float3{-CAM_SHIFT, 0, 0});
-    try {
-        this->facade->execute(camera_move_cmd);
-        this->updateScene();
-    } catch (BaseException& ex) {
-        QMessageBox::warning(this, "Error", QString(ex.what()));
-    }
-    this->updateLocation();
-}
-
-void MainWindow::on_cam_move_up_btn_clicked() {
-    if (!this->checkCam()) return;
-
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->_currCamId(), float3{0, CAM_SHIFT, 0});
-    try {
-        this->facade->execute(camera_move_cmd);
-        this->updateScene();
-    } catch (BaseException& ex) {
-        QMessageBox::warning(this, "Error", QString(ex.what()));
-    }
-    this->updateLocation();
-
-}
-
-void MainWindow::on_cam_move_down_btn_clicked() {
-    if (!this->checkCam()) return;
-
-    auto camera_move_cmd = std::make_shared<MoveCamera>(this->_currCamId(), float3{0, -CAM_SHIFT, 0});
-    try {
-        this->facade->execute(camera_move_cmd);
-        this->updateScene();
-    } catch (BaseException& ex) {
-        QMessageBox::warning(this, "Error", QString(ex.what()));
-    }
-    this->updateLocation();
-
-}
-
-
 void MainWindow::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
 
@@ -498,9 +381,8 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    this->setupScene();
-
     this->facade = std::make_shared<Facade>(Facade());
+    this->setupScene();
 }
 
 bool MainWindow::checkModel() {
@@ -560,29 +442,59 @@ size_t MainWindow::_currLightId() {
 MainWindow::~MainWindow() { delete ui; }
 
 
-void MainWindow::on_cam_turn_left_btn_clicked() {
+void MainWindow::_rotateCam(const int2& delta) {
+    if (!this->checkCam()) return;
 
+    try {
+        this->facade->execute(std::make_shared<RotateCamera>(this->_currCamId(), delta));
+        this->updateScene();
+    } catch (BaseException& ex) {
+        QMessageBox::warning(this, "Error", QString(ex.what()));
+    }
+
+    this->_updateCamInfo();
 }
 
-void MainWindow::on_cam_turn_right_btn_clicked() {
+void MainWindow::_shiftCam(const float3& delta) {
+    if (!this->checkCam()) return;
 
+    try {
+        this->facade->execute(std::make_shared<MoveCamera>(this->_currCamId(), delta));
+        this->updateScene();
+    } catch (BaseException& ex) {
+        QMessageBox::warning(this, "Error", QString(ex.what()));
+    }
+    this->_updateCamInfo();
 }
 
-void MainWindow::on_cam_turn_down_btn_clicked() {
+void MainWindow::on_cam_zoom_in_btn_clicked() { this->_shiftCam(float3{0, 0, -CAM_SHIFT}); }
 
-}
+void MainWindow::on_cam_zoom_out_btn_clicked() { this->_shiftCam(float3{0, 0, CAM_SHIFT}); }
 
-void MainWindow::on_cam_turn_up_btn_clicked() {
+void MainWindow::on_cam_move_right_btn_clicked() { this->_shiftCam(float3{CAM_SHIFT, 0, 0}); }
 
-}
+void MainWindow::on_cam_move_left_btn_clicked() { this->_shiftCam(float3{-CAM_SHIFT, 0, 0}); }
+
+void MainWindow::on_cam_move_up_btn_clicked() { this->_shiftCam(float3{0, CAM_SHIFT, 0}); }
+
+void MainWindow::on_cam_move_down_btn_clicked() { this->_shiftCam(float3{0, -CAM_SHIFT, 0}); }
+
+void MainWindow::on_cam_turn_left_btn_clicked() { this->_rotateCam(int2{0, -CAM_ANGLE}); }
+
+void MainWindow::on_cam_turn_right_btn_clicked() { this->_rotateCam(int2{0, CAM_ANGLE}); }
+
+void MainWindow::on_cam_turn_down_btn_clicked() { this->_rotateCam(int2{-CAM_ANGLE, 0}); }
+
+void MainWindow::on_cam_turn_up_btn_clicked() { this->_rotateCam(int2{CAM_ANGLE, 0}); }
 
 void MainWindow::on_cam_apply_btn_clicked() {
-
+    this->facade->execute(std::make_shared<SetCameraFov>(this->_currCamId(), this->_readCamFov()));
+    this->updateScene();
 }
 
 void MainWindow::on_light_apply_btn_clicked() {
     if (!_lightSelected()) {
-        QMessageBox::critical(nullptr, "Ошибка", "Сначала выберите камеру");
+        QMessageBox::critical(nullptr, "Ошибка", "Сначала выберите источник света");
         return;
     }
     this->facade->execute(std::make_shared<EditLight>(_currLightId(), _readLightCoords(), _readLightIntensity()));
@@ -590,13 +502,15 @@ void MainWindow::on_light_apply_btn_clicked() {
 }
 
 void MainWindow::on_mat_apply_btn_clicked() {
+    if (!_modSelected()) {
+        QMessageBox::critical(nullptr, "Ошибка", "Сначала выберите модель");
+        return;
+    }
+
     this->facade->execute(std::make_shared<EditModelMaterial>(_currModId(), _readMaterial()));
     this->updateScene();
 }
 
-void MainWindow::on_mat_load_btn_clicked() {
-
-}
 
 void MainWindow::on_mod_switch_btn_clicked() {
     if (ui->models_list->currentRow() < 0) {
@@ -615,7 +529,7 @@ void MainWindow::on_light_switch_btn_clicked() {
     }
 
     ui->light_curr_lbl->setText(ui->lights_list->currentItem()->text());
-    this->updateLightInfo();
+    this->_updateLightInfo();
 }
 
 
@@ -624,9 +538,9 @@ void MainWindow::_updateMaterialInfo() {
     this->facade->execute(std::make_shared<GetModelInfo>(_currModId(), mat));
 
     auto c = mat->getDiffuseColor();
-    ui->color0_box->setValue(c.x);
-    ui->color1_box->setValue(c.y);
-    ui->color2_box->setValue(c.z);
+    ui->color0_box->setValue(c[0]);
+    ui->color1_box->setValue(c[1]);
+    ui->color2_box->setValue(c[2]);
 
     auto al = mat->getAlbedo();
     ui->alb0_box->setValue(al[0]);
@@ -634,9 +548,8 @@ void MainWindow::_updateMaterialInfo() {
     ui->alb2_box->setValue(al[2]);
     ui->alb3_box->setValue(al[3]);
 
-    ui->refr_idx_box->setValue(mat->getRefrIdx());
+    ui->refr_idx_box->setValue(mat->getRefIdx());
     ui->spec_exp_box->setValue(mat->getSpecExp());
-    ui->ambient_box->setValue(mat->getAmbient());
 }
 
 
@@ -669,3 +582,34 @@ void MainWindow::_updateSceneLightData() {
     ui->scene_ambient_box->setValue(*scene_ambient_ratio);
     ui->rtree_h_box->setValue(*rtree_height_max);
 }
+
+void MainWindow::_updateCamInfo() {
+    auto pos = std::make_shared<float3>();
+    auto angles = std::make_shared<int2>();
+    auto fov = std::make_shared<int>();
+
+    this->facade->execute(std::make_shared<GetCameraInfo>(_currCamId(), pos, angles, fov));
+
+    this->_setCamInfo(*pos, *angles, *fov);
+}
+
+void MainWindow::_setCamInfo(const float3& pos, const int2& angles, int fov) {
+    ui->cam_x_box->setValue(pos.x);
+    ui->cam_y_box->setValue(pos.y);
+    ui->cam_z_box->setValue(pos.z);
+
+    ui->cam_x_axis_angle_box->setValue(angles.x);
+    ui->cam_y_axis_angle_box->setValue(angles.y);
+
+    this->_updateCamFov(fov);
+}
+
+int MainWindow::_readCamFov() {
+    return ui->cam_fov_box->value();
+}
+
+void MainWindow::_updateCamFov(int value) {
+    ui->cam_fov_box->setValue(value);
+}
+
+void MainWindow::on_mat_load_btn_clicked() {}
