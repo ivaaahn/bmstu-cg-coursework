@@ -18,7 +18,6 @@ using namespace linalg::aliases;
 
 class Sphere final : public Figure {
 private:
-    float3 _center;
     float _radius;
     void _loadRadius(const std::shared_ptr<std::ifstream>& srcFile);
     void _loadCenter(const std::shared_ptr<std::ifstream>& srcFile);
@@ -38,7 +37,7 @@ public:
 
 //    void transform(const float3& move, const float3& scale, const float3& rotate) final;
 
-    [[nodiscard]] float3 getCenter() const override { return this->_center; }
+//    [[nodiscard]] float3 getCenter() const override { return this->_center; }
 
     [[nodiscard]] raw_figure clFormat() const override;
 

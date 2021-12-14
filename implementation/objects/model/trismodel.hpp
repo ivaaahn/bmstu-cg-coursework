@@ -58,7 +58,7 @@ private:
 public:
     explicit TriangularModel(const std::shared_ptr<std::ifstream>& srcFile);
 
-    [[nodiscard]] float3 getCenter() const override;
+//    [[nodiscard]] float3 getCenter() const override;
 
     [[nodiscard]] int numOfPoints() const;
 

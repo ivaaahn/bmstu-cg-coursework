@@ -185,10 +185,11 @@ bool sphereIsIntersect(global const RawFigure *fig, const Ray *ray, float *distT
 bool rayBoxIntersect(global const RawFigure *fig, const Ray *r) {
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
-    tmin = (fig->box_bounds[r->sign.s0].x - r->src.x) * r->invdir.x;
-    tmax = (fig->box_bounds[1-r->sign.s0].x - r->src.x) * r->invdir.x;
-    tymin = (fig->box_bounds[r->sign.s1].y - r->src.y) * r->invdir.y;
-    tymax = (fig->box_bounds[1-r->sign.s1].y - r->src.y) * r->invdir.y;
+    tmin = (fig->box_bounds[r->sign.x].x - r->src.x) * r->invdir.x;
+    tmax = (fig->box_bounds[1-r->sign.x].x - r->src.x) * r->invdir.x;
+
+    tymin = (fig->box_bounds[r->sign.y].y - r->src.y) * r->invdir.y;
+    tymax = (fig->box_bounds[1-r->sign.y].y - r->src.y) * r->invdir.y;
 
     if ((tmin > tymax) || (tymin > tmax))
         return false;
@@ -197,8 +198,8 @@ bool rayBoxIntersect(global const RawFigure *fig, const Ray *r) {
     if (tymax < tmax)
         tmax = tymax;
 
-    tzmin = (fig->box_bounds[r->sign.s2].z - r->src.z) * r->invdir.z;
-    tzmax = (fig->box_bounds[1-r->sign.s2].z - r->src.z) * r->invdir.z;
+    tzmin = (fig->box_bounds[r->sign.z].z - r->src.z) * r->invdir.z;
+    tzmax = (fig->box_bounds[1-r->sign.z].z - r->src.z) * r->invdir.z;
 
     // if ((tmin > tzmax) || (tzmin > tmax))
     //     return false;
@@ -263,7 +264,7 @@ float3 getTriangleNormal(global const RawFigure *fig, const int3 face, const Ray
 
 
 bool rayTriangleModelIntersect(global const RawFigure *fig, const Ray *ray, float *distTo1stIntersect, float3 *N, float3 *hit) {
-    // if (!rayBoxIntersect(fig, ray)) return false;
+    if (!rayBoxIntersect(fig, ray)) return false;
 
     float faceDist = MAXFLOAT;
     float currDist;
@@ -299,25 +300,42 @@ bool sceneIsIntersect(global const RawFigure *fList, const int flLen, const Ray 
     float currDist;
     float3 currN, currHit;
 
+    bool has_intersected;
     for (int i = 0; i < flLen; ++i)
     {
-        if ((fList[i].fig_type == POLYGONAL) && rayTriangleModelIntersect(&fList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
-        {
+
+        if (fList[i].fig_type == POLYGONAL) {
+            has_intersected = rayTriangleModelIntersect(&fList[i], ray, &currDist, &currN, &currHit);
+        }
+        else {
+            has_intersected = sphereIsIntersect(&fList[i], ray, &currDist, &currN, &currHit);
+        }
+
+
+        if (has_intersected && currDist < figuresDist) {
             figuresDist = currDist;
             *hit = currHit;
             *N = currN;
             *mat = fList[i].material;
-
-            continue;
         }
 
-        if (sphereIsIntersect(&fList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
-        {
-            figuresDist = currDist;
-            *hit = currHit;
-            *N = currN;
-            *mat = fList[i].material;
-        }
+        // if ((fList[i].fig_type == POLYGONAL) && rayTriangleModelIntersect(&fList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
+        // {
+        //     figuresDist = currDist;
+        //     *hit = currHit;
+        //     *N = currN;
+        //     *mat = fList[i].material;
+
+        //     continue;
+        // }
+
+        // if (sphereIsIntersect(&fList[i], ray, &currDist, &currN, &currHit) && currDist < figuresDist)
+        // {
+        //     figuresDist = currDist;
+        //     *hit = currHit;
+        //     *N = currN;
+        //     *mat = fList[i].material;
+        // }
     }
 
     float checkerboard_dist = MAXFLOAT;
@@ -430,8 +448,8 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
             stack[++top] = d;
 
             // get left child
-            float3 new_src =  dot(d.ray.dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
             float3 new_dir = normalize(reflect(d.ray.dir, d.N));
+            float3 new_src =  dot(new_dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
             RayInit(&d.ray, new_src, new_dir);
             d.idx = id++;
           
@@ -451,8 +469,8 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
             curr_color = (float3)(COLOR_R/255., COLOR_G/255., COLOR_B/255.) * sceneAmbientLight;
 
             // get right child
-            float3 new_src = dot(d.ray.dir, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
             float3 new_dir = normalize(refract(d.ray.dir, d.N, d.m.refIdx, 1.f));
+            float3 new_src = dot(new_src, d.N) < 0 ? (d.hit - d.N * (float)1e-3) : (d.hit + d.N * (float)1e-3);
             RayInit(&d.ray, new_src, new_dir);
             d.idx = id++;
 

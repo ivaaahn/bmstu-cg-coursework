@@ -154,6 +154,9 @@ TriangularModel::TriangularModel(const std::shared_ptr<std::ifstream>& srcFile) 
     std::string line;
     std::ifstream in;
 
+    auto center = float3 {0.};
+
+
     while (!srcFile->eof()) {
         std::getline(*srcFile, line);
         std::istringstream iss(line);
@@ -166,6 +169,7 @@ TriangularModel::TriangularModel(const std::shared_ptr<std::ifstream>& srcFile) 
             }
 
             this->_points.push_back(v);
+            center += v;
         }
         else if (!line.compare(0, 2, "f ")) {
             int3 f;
@@ -183,6 +187,8 @@ TriangularModel::TriangularModel(const std::shared_ptr<std::ifstream>& srcFile) 
             break;
         }
     }
+
+    this->_center = center / this->_points.size();
 
 //    for (int i=0; i<this->numOfFaces(); ++i) {
 //        if (this->_faces[i].verts.x < 0) this->_faces[i].verts.x += this->numOfFaces();
@@ -359,16 +365,20 @@ void TriangularModel::_rotZ(float3& p, float angle) {
 //    this->_box_bounds[1] = bbox_pmax_new;
 //}
 //
-float3 TriangularModel::getCenter() const {
-    auto center = float3{0.};
-    for (const auto& p: this->_corners)
-        center += p;
-
-    return center / 8;
-}
+//float3 TriangularModel::getCenter() const {
+//    auto center = float3{0.};
+//    for (const auto& p: this->_corners)
+//        center += p;
+//
+//    return center / 8;
+//}
 
 void TriangularModel::rotate(const float3& value) {
     auto center = this->getCenter();
+
+    auto p_min = float3{1.} * std::numeric_limits<float>::max();
+    auto p_max = float3{1.} * std::numeric_limits<float>::min();
+
 
 #pragma omp parallel for num_threads(16)
     for (int i = 0; i < this->_points.size(); ++i) {
@@ -377,18 +387,42 @@ void TriangularModel::rotate(const float3& value) {
         this->_rotY(this->_points[i], value.y);
         this->_rotZ(this->_points[i], value.z);
         this->_points[i] += center;
+
+        for (int k = 0; k < 3; ++k) {
+            p_min[k] = std::min(p_min[k], this->_points[i][k]);
+            p_max[k] = std::max(p_max[k], this->_points[i][k]);
+        }
     }
+
+    this->_box_bounds[0] = p_min;
+    this->_box_bounds[1] = p_max;
 }
 
 void TriangularModel::translate(const float3& value) {
+    this->_center += value;
+
+    auto p_min = float3{1.} * std::numeric_limits<float>::max();
+    auto p_max = float3{1.} * std::numeric_limits<float>::min();
+
 #pragma omp parallel for num_threads(16)
     for (int i = 0; i < this->_points.size(); ++i) {
         this->_points[i] += value;
+
+        for (int k = 0; k < 3; ++k) {
+            p_min[k] = std::min(p_min[k], this->_points[i][k]);
+            p_max[k] = std::max(p_max[k], this->_points[i][k]);
+        }
     }
+
+    this->_box_bounds[0] = p_min;
+    this->_box_bounds[1] = p_max;
 }
 
 void TriangularModel::scale(const float3& value) {
     auto center = this->getCenter();
+
+    auto p_min = float3{1.} * std::numeric_limits<float>::max();
+    auto p_max = float3{1.} * std::numeric_limits<float>::min();
 
 #pragma omp parallel for num_threads(16)
     for (int i = 0; i < this->_points.size(); ++i) {
@@ -399,7 +433,15 @@ void TriangularModel::scale(const float3& value) {
         this->_points[i].z *= value.z;
 
         this->_points[i] += center;
+
+        for (int k = 0; k < 3; ++k) {
+            p_min[k] = std::min(p_min[k], this->_points[i][k]);
+            p_max[k] = std::max(p_max[k], this->_points[i][k]);
+        }
     }
+
+    this->_box_bounds[0] = p_min;
+    this->_box_bounds[1] = p_max;
 }
 
 

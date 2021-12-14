@@ -37,6 +37,7 @@ typedef struct __attribute__ ((packed)) _raw_figure {
 class Figure {
 protected:
     Material _material;
+    float3 _center;
 
 public:
     Figure() = default;
@@ -58,7 +59,7 @@ public:
 
     [[nodiscard]] Material getMaterial() { return this->_material; }
 
-    [[nodiscard]] virtual float3 getCenter() const = 0;
+    [[nodiscard]] virtual float3 getCenter() const { return this->_center; }
 
     [[nodiscard]] raw_material clMaterial() const { return _material.clFormat(); }
 
