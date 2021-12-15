@@ -8,7 +8,6 @@
 #include <memory>
 #include <fstream>
 
-#include <objects/object.hpp>
 #include "math/linalg.hpp"
 #include <CL/cl.hpp>
 

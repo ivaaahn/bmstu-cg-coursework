@@ -7,7 +7,6 @@
 
 
 #include "objects/model/model_details/point/point.hpp"
-#include "objects/object.hpp"
 #include "managers/manager.hpp"
 
 class TransformManager : public Manager {

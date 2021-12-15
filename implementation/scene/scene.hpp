@@ -7,7 +7,6 @@
 
 
 #include <memory>
-#include <objects/object.hpp>
 #include <objects/light/light.hpp>
 #include <objects/model/figure.hpp>
 #include "objects/camera/camera.hpp"

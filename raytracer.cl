@@ -402,7 +402,6 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
         while (d.hits)
         {
             d.depth = top < 0 ? 0 : stack[top].depth + 1;
-            // printf("(%d, %d): while... stacktop == %d, id == %d, depth == %d\n", i, j, top, d.idx, d.depth);
 
             stack[++top] = d;
             stack[++top] = d;
@@ -423,8 +422,6 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
 
         if (top != -1 && stack[top].idx == d.idx)
         {
-            // printf("(%d, %d): if... stacktop == %d, id == %d, depth == %d\n", i, j, top, d.idx, d.depth);
-
             stack[top].reflect_cf = curr_color;
             curr_color = (float3)(COLOR_R/255., COLOR_G/255., COLOR_B/255.) * sceneAmbientLight;
 
@@ -438,13 +435,11 @@ float3 getColor(global const RawFigure *fList, int flLen, global const Light *lL
         }
         else
         {
-            // printf("(%d, %d): else... stacktop == %d, id == %d, depth == %d\n", i, j, top, d.idx, d.depth);
             curr_color = _getColor(fList, flLen, lList, llLen, &d.m, d.hit, &d.ray, d.N, d.reflect_cf, curr_color, sceneAmbientLight);
             d.hits = false;
         }
     }
 
-    // printf("(%d, %d) end...\n", i, j);
     return curr_color;
 }
 
@@ -466,35 +461,12 @@ kernel void Render(global uchar *pixels,
 	int lightListLen = llLen[0]; // lights in list
     float sceneAmbientLight = sceneAmbientLightArr[0];
     int rayTreeHeight = rayTreeHeightArr[0];
-    // printf("L == %d\n\n", lightList[0].intensity);
-    // printf("num_of_lights == %d\n", lightListLen);
-
-    // printf("num_of_points == %d", figList[0].num_of_points);
-    // printf("num_of_faces == %d", figList[0].num_of_faces);
 
 	int j = floor((double)(gid / dim.x)); // Current Y
 	int i = gid - (j * dim.x); // Current X
 
-    // printf("(%d, %d)\n", i, j);
-
     Ray ray;
     getRay(&ray, i, j, dim, cam);
-
-    // printf("Material: (%f, %f, %f), (%f, %f, %f), %f\n",
-    //  figList[0].material.albedo.x, figList[0].material.albedo.y, figList[0].material.albedo.z,
-    //  figList[0].material.diffuse.x, figList[0].material.diffuse.y, figList[0].material.diffuse.z,
-    //  figList[0].material.specularExp);
-
-    // printf("figList[0].faces[0].s0 = %d\n", figList[0].faces[0].s0);
-    // printf("figList[0].faces[0].s1 = %d\n", figList[0].faces[0].s1);
-    // printf("figList[0].faces[0].s2 = %d\n\n", figList[0].faces[0].s2);
-
-    // printf("figList[0].faces[1].s0 = %d\n", figList[0].faces[1].s0);
-    // printf("figList[0].faces[1].s1 = %d\n", figList[0].faces[2].s1);
-    // printf("figList[0].faces[1].s2 = %d\n\n", figList[0].faces[3].s2);
-
-
-	// Sphere sphere = { (float3)(figList[gid].s0, figList[gid].s1, figList[gid].s2), (float)figList[gid].s3 };
 
     float3 c = getColor(figList, figListLen, lightList, lightListLen, &ray, sceneAmbientLight, rayTreeHeight);
 
@@ -505,32 +477,9 @@ kernel void Render(global uchar *pixels,
     c[1] = max(0.f, min(1.f, c.s1)) * 255;
     c[2] = max(0.f, min(1.f, c.s2)) * 255;
 
-/*
-    0123 - 1
-    3454 - 2
-    6785 - 3
-    9101112 - 4 
-
-    x * 3 
-*/
     int coords = gid*4-4;
 
     pixels[coords] = c.s2;
     pixels[coords+1] = c.s1;
     pixels[coords+2] = c.s0;
-
-	// pixel[gid] = c;
-
-
-	/*
-		gid = 15;
-		W = 10 (dim.x)
-		H = 5 (dim.y)
-
-		=> j =  floor((double)(gid / dim.x)) = floor(15 / 10) - floor(1.5) == 1;
-		=> i = gid - (j * dim.x) = 15 - (1 * 10) = 5;
-
-		i + j * dim.x = 5 + 1 * 10 = 15
-
-	*/
 }

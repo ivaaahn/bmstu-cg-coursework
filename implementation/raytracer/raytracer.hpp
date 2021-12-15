@@ -14,8 +14,8 @@
 class RayTracer {
 public:
     RayTracer();
-    static void cpuRender(const std::shared_ptr<Scene> &scene, const std::shared_ptr<Camera> &cam, const std::shared_ptr<Drawer> &drawer);
-    void gpuRender(const std::shared_ptr<Scene> &scene, const std::shared_ptr<Camera> &cam, const std::shared_ptr<Drawer> &drawer);
+    static void cpuRender(const std::shared_ptr<Scene> &scene, const std::shared_ptr<Camera> &cam, const std::shared_ptr<Drawer> &drawer, int size, int threads);
+    void gpuRender(const std::shared_ptr<Scene> &scene, const std::shared_ptr<Camera> &cam, const std::shared_ptr<Drawer> &drawer, int size);
 
 private:
     cl::Device device;

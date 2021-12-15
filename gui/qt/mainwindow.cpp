@@ -272,23 +272,6 @@ void MainWindow::_updateLightInfo() {
 }
 
 
-//void MainWindow::on_change_model_btn_clicked() {
-//    if (ui->models_list->currentRow() < 0) {
-//        QMessageBox::critical(nullptr, "Ошибка", "Выберите модель, которую хотите сделать текущей");
-//        return;
-//    }
-//
-//    auto curr_item = ui->models_list->currentItem();
-//
-//    if (curr_item->text().contains("Model"))
-//        ui->curr_model_lbl->setText(curr_item->text());
-//    else
-//        QMessageBox::critical(nullptr, "Ошибка", "Выберите корректную модель");
-//}
-
-
-
-
 void MainWindow::on_cam_switch_btn_clicked() {
     if (ui->cams_list->currentRow() < 0) {
         QMessageBox::critical(nullptr, "Ошибка", "Выберите камеру, которую хотите сделать текущей");

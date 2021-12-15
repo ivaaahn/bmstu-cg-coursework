@@ -9,9 +9,6 @@
 #include <memory>
 #include <vector>
 #include <iostream>
-#include <visitor/draw_visitor/draw_visitor.hpp>
-#include "model_details/model_details.hpp"
-#include "objects/object.hpp"
 #include "figure.hpp"
 
 using namespace linalg::aliases;
@@ -45,9 +42,6 @@ private:
 
     static void _rotZ(float3& p, float angle);
 
-//    static void _scale(float3& point, const float3& scale);
-
-//    void _rot(float3& point, const float3& rotate);
 
     void rotate(const float3& value) override;
     void translate(const float3& value) override;
@@ -57,8 +51,6 @@ private:
 
 public:
     explicit TriangularModel(const std::shared_ptr<std::ifstream>& srcFile);
-
-//    [[nodiscard]] float3 getCenter() const override;
 
     [[nodiscard]] int numOfPoints() const;
 
@@ -74,8 +66,6 @@ public:
 
     bool
     rayIntersect(const std::shared_ptr<Ray>& ray, float& distTo1stIntersect, float3& N, float3& hit) const override;
-
-//    void transform(const float3& move, const float3& scale, const float3& rotate) override;
 
     [[nodiscard]] raw_figure clFormat() const override;
 

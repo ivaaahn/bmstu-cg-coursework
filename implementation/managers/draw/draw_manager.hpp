@@ -9,11 +9,9 @@
 #include <raytracer/raytracer.hpp>
 #include "managers/manager.hpp"
 #include "managers/load/load_manager.hpp"
-#include "objects/model/model_details/point/point.hpp"
 #include "objects/model/trismodel.hpp"
 #include "objects/camera/camera.hpp"
 #include "scene/scene.hpp"
-//#include "visitor/visitor.hpp"
 #include "drawer/drawer.hpp"
 
 class DrawManager : public Manager {
@@ -29,11 +27,9 @@ public:
     void draw(const std::shared_ptr<Scene> &scene, const std::shared_ptr<Camera> &camera);
 
     void setDrawer(std::shared_ptr<Drawer> dr);
-//    void setRayTracer(std::shared_ptr<RayTracer> rt);
 
 private:
     std::shared_ptr<Drawer> drawer;
-//    std::shared_ptr<RayTracer> raytracer;
 };
 
 class DrawManagerCreator {

@@ -16,40 +16,33 @@
 
 
 void RayTracer::cpuRender(const std::shared_ptr<Scene>& scene, const std::shared_ptr<Camera>& cam,
-                          const std::shared_ptr<Drawer>& drawer) {
+                          const std::shared_ptr<Drawer>& drawer, int size, int threads) {
     uchar *img = drawer->getImage()->bits();
-//#pragma omp parallel for num_threads(8)
-    for (int j = 0; j < HEIGHT; j++) {
-        for (int i = 0; i < WIDTH; i++) {
+#pragma omp parallel for num_threads(threads)
+    for (int j = 0; j < size; j++) {
+        for (int i = 0; i < size; i++) {
             auto c = RaysHandling::castRayCPU(cam->getRay(i, j), scene);
-
-//            std::cout << "[" << j << ", " << i << "]: " << c.x*255 << ' ' << c.y*255 << ' ' << c.z*255 << std::endl;
 
             float max = std::max(c[0], std::max(c[1], c[2]));
             if (max > 1) c *= (1.f / max);
 
-            c[0] = std::max(0.f, std::min(1.f, c[0]));
-            c[1] = std::max(0.f, std::min(1.f, c[1]));
-            c[2] = std::max(0.f, std::min(1.f, c[2]));
+            c[0] = std::max(0.f, std::min(1.f, c[0])) * 255;
+            c[1] = std::max(0.f, std::min(1.f, c[1])) * 255;
+            c[2] = std::max(0.f, std::min(1.f, c[2])) * 255;
 
-            c *= 255;
-
-//            drawer->putPixel(int2{i, j}, c);
             int coord = (j*WIDTH+i)*4-4;
-
             img[coord] = c[2];
             img[coord+1] = c[1];
             img[coord+2] = c[0];
         }
     }
-    std::cerr << "CPU raytracing is done!\n";
 }
 
 
 #define NUM_OF_ELEMENTS WIDTH * HEIGHT
 
 void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared_ptr<Camera>& cam,
-                          const std::shared_ptr<Drawer>& drawer) {
+                          const std::shared_ptr<Drawer>& drawer, int size) {
 
     auto *hFigures = new raw_figure[scene->_models.size()];
     auto *hLights = new raw_light[scene->_lights.size()];
@@ -57,24 +50,28 @@ void RayTracer::gpuRender(const std::shared_ptr<Scene>& scene, const std::shared
     auto *hDim = new cl_int2[1];                        // Dimensions
     auto *hFigSize = new cl_int[1];                     // Figures List's Size
     auto *hLightSize = new cl_int[1];                   // Lights List's Size
-    auto *hSceneAmbientLight = new cl_float[1];                   // Lights List's Size
-    auto *hRayTreeHeightMax = new cl_int[1];                   // Lights List's Size
+    auto *hSceneAmbientLight = new cl_float[1];         // Lights List's Size
+    auto *hRayTreeHeightMax = new cl_int[1];            // Lights List's Size
 
     cl_uchar *hImg = drawer->getImage()->bits();
     int hImgLen = (int)drawer->getImage()->sizeInBytes();
 
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
     for (int i = 0; i < int(scene->_models.size()); ++i)
         hFigures[i] = scene->_models[i]->clFormat();
 
 
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
     for (int i = 0; i < int(scene->_lights.size()); ++i)
         hLights[i] = scene->_lights[i]->clFormat();
 
 
     hCamera[0] = cam->clFormat();     // Gathering cameras
-    hDim[0] = {WIDTH, HEIGHT};
+    if (size != -1) {
+        hDim[0] = {size, size};
+    } else {
+        hDim[0] = {WIDTH, HEIGHT};
+    }
     hFigSize[0] = int(scene->_models.size());
     hLightSize[0] = int(scene->_lights.size());
     hSceneAmbientLight[0] = scene->getAmbientLightIntensity();

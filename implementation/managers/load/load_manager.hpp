@@ -11,7 +11,6 @@
 #include <load/loaders/loaders.hpp>
 #include <objects/light/light.hpp>
 #include "managers/manager.hpp"
-#include "objects/object.hpp"
 
 class LoadManager : public Manager {
 public:
@@ -35,7 +34,6 @@ private:
     std::shared_ptr<FigureLoader> figLoader;
     std::shared_ptr<CameraLoader> camLoader;
     std::shared_ptr<LightLoader> lightLoader;
-//    std::shared_ptr<LoadDirector> director;
 };
 
 class LoadManagerCreator {
